@@ -1,0 +1,5 @@
+dist
+node_modules
+.taste-skill
+test-results
+package-lock.json

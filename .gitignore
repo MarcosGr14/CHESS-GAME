@@ -1,0 +1,7 @@
+node_modules/
+dist/
+coverage/
+.taste-skill/screenshots/
+test-results/
+.DS_Store
+*.local
