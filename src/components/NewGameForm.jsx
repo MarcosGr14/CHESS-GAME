@@ -10,8 +10,13 @@ import {
 import { useBotStore } from '../store/botStore';
 import Icon from './Icon';
 import Piece from './Piece';
+import { useProfileStore } from '../store/profileStore';
+import { getLevelProgress } from '../core/xp';
 
 export default function NewGameForm({ current, onStart }) {
+  const profile = useProfileStore();
+  const playerLevel = getLevelProgress(profile.xp).level;
+  const unlocked = (bot) => isBotUnlocked(bot, defeated, playerLevel);
   const defeated = useBotStore((state) => state.defeatedBots);
   const [mode, setMode] = useState(current.mode);
   const [control, setControl] = useState(current.timeControl);
@@ -21,13 +26,13 @@ export default function NewGameForm({ current, onStart }) {
       : { w: 'Jugador de blancas', b: 'Jugador de negras' },
   );
   const [playerName, setPlayerName] = useState(
-    current.mode === 'bot' ? current.names[current.humanColor] : 'Tú',
+    current.mode === 'bot' ? current.names[current.humanColor] : profile.name,
   );
   const [color, setColor] = useState(
     current.mode === 'bot' ? current.humanColor : 'w',
   );
   const [botId, setBotId] = useState(
-    isBotUnlocked(getBot(current.botId), defeated) ? current.botId : BOTS[0].id,
+    unlocked(getBot(current.botId)) ? current.botId : BOTS[0].id,
   );
   const bot = getBot(botId);
   return (
@@ -105,17 +110,13 @@ export default function NewGameForm({ current, onStart }) {
             onChange={(event) => setBotId(event.target.value)}
           >
             {BOTS.map((item, index) => (
-              <option
-                key={item.id}
-                value={item.id}
-                disabled={!isBotUnlocked(item, defeated)}
-              >
+              <option key={item.id} value={item.id} disabled={!unlocked(item)}>
                 {item.name} · Nivel {item.level} · ≈{item.elo} Elo
-                {isBotUnlocked(item, defeated)
+                {unlocked(item)
                   ? defeated.includes(item.id)
                     ? ' · Vencido'
                     : ''
-                  : ` · Vence a ${BOTS[index - 1].name}`}
+                  : ` · Nivel ${item.unlockLevel} o vence a ${BOTS[index - 1].name}`}
               </option>
             ))}
           </select>
@@ -137,8 +138,8 @@ export default function NewGameForm({ current, onStart }) {
             </div>
           </div>
           <p className="bot-unlock-note">
-            Vence a cada rival para desbloquear el siguiente. El Elo es
-            orientativo.
+            Vence al rival anterior o sube de nivel para abrir la siguiente
+            mesa. El Elo es orientativo.
           </p>
           <label className="form-label" htmlFor="player-name">
             Tu nombre

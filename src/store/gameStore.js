@@ -6,16 +6,21 @@ import {
   getClock,
   getTimeout,
   restoreChess,
-  undoMove,
   validateGame,
 } from '../core/game';
-import { getBot, isBotUnlocked, otherColor, undoHumanTurn } from '../core/bots';
+import { getBot, isBotUnlocked, otherColor } from '../core/bots';
+import { planUndo } from '../core/progression';
+import { getLevelProgress } from '../core/xp';
 import { createPersistStorage, reportStorageError } from '../storage';
 import { useBotStore } from './botStore';
+import { useProfileStore } from './profileStore';
+import { useSettingsStore } from './settingsStore';
 
-function rememberVictory(state) {
+function recordResult(state) {
   if (state.mode === 'bot' && state.result?.winner === state.humanColor)
     useBotStore.getState().recordVictory(state.botId);
+  if (state.mode === 'bot' && state.result && state.progressTracking)
+    useProfileStore.getState().registerGame(state);
 }
 
 export const useGameStore = create(
@@ -23,8 +28,10 @@ export const useGameStore = create(
     (set, get) => {
       // Every change invalidates in-flight answers, including returning to an old FEN.
       const commit = (patch) => {
+        if (patch.result && !get().result && !patch.finishedAt)
+          patch = { ...patch, finishedAt: new Date().toISOString() };
         set({ ...patch, revision: get().revision + 1 });
-        rememberVictory(get());
+        recordResult(get());
       };
       return {
         ...createGame(),
@@ -35,6 +42,7 @@ export const useGameStore = create(
             !isBotUnlocked(
               getBot(options.botId),
               useBotStore.getState().defeatedBots,
+              getLevelProgress(useProfileStore.getState().xp).level,
             )
           )
             return false;
@@ -69,8 +77,21 @@ export const useGameStore = create(
           return true;
         },
         undo: () => {
-          const next = undoHumanTurn(get(), undoMove, Date.now());
-          if (next) commit(next);
+          try {
+            const plan = planUndo(
+              useProfileStore.getState(),
+              get(),
+              useSettingsStore.getState().botUndoCost,
+              Date.now(),
+            );
+            if (!plan) return false;
+            if (plan.cost)
+              useProfileStore.getState().importProfile(plan.profile);
+            commit(plan.game);
+            return true;
+          } catch {
+            return false;
+          }
         },
         checkTimeout: () => {
           const state = get();
@@ -158,14 +179,14 @@ export const useGameStore = create(
     },
     {
       name: 'enroque-game',
-      version: 2,
+      version: 3,
       storage: createPersistStorage('game'),
       onRehydrateStorage: () => (state, error) => {
         if (error)
           reportStorageError(
             'No se pudo migrar la partida guardada. Puedes recuperar un respaldo desde Ajustes.',
           );
-        else if (state) rememberVictory(state);
+        else if (state) recordResult(state);
       },
       partialize: (state) =>
         Object.fromEntries(

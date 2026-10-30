@@ -4,9 +4,13 @@ import { useGameStore } from '../store/gameStore';
 import Icon from '../components/Icon';
 import Piece from '../components/Piece';
 import { getBot } from '../core/bots';
+import { useProfileStore } from '../store/profileStore';
+import XPProgress from '../components/XPProgress';
+import { getRank, getLevelProgress } from '../core/xp';
 
 export default function Home() {
   const game = useGameStore();
+  const profile = useProfileStore();
   const chess = restoreChess(game);
   const ongoing = game.moves.length > 0 && !game.result;
   const bot = getBot(game.botId);
@@ -96,6 +100,19 @@ export default function Home() {
               </dd>
             </div>
           </dl>
+          <section className="home-profile">
+            <div className="section-heading">
+              <h2>Tu recorrido</h2>
+              <Link to="/perfil" className="text-button">
+                Ver perfil <Icon name="arrow" size={15} />
+              </Link>
+            </div>
+            <p>
+              {getRank(getLevelProgress(profile.xp).level).name} ·{' '}
+              {profile.rating} Elo interno
+            </p>
+            <XPProgress xp={profile.xp} compact />
+          </section>
           <div className="home-guide">
             <Icon name="book" size={24} />
             <h3>Primero, lo esencial.</h3>

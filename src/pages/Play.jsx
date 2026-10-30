@@ -1,4 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { useProfileStore } from '../store/profileStore';
+import RewardSummary from '../components/RewardSummary';
 import {
   COLORS,
   TIME_CONTROLS,
@@ -24,6 +27,7 @@ import { retryEngine, useEngineStore } from '../engine/useBotOpponent';
 export default function Play() {
   const game = useGameStore();
   const settings = useSettingsStore();
+  const coins = useProfileStore((state) => state.wallet.balance);
   const engine = useEngineStore();
   const bot = getBot(game.botId);
   const isBot = game.mode === 'bot';
@@ -40,7 +44,9 @@ export default function Play() {
   const botTurn = isBot && turn !== game.humanColor;
   const resigningColor = isBot ? game.humanColor : turn;
   const canUndo = isBot
-    ? game.moves.some((move) => move.color === game.humanColor)
+    ? !game.result &&
+      coins >= settings.botUndoCost &&
+      game.moves.some((move) => move.color === game.humanColor)
     : !!game.moves.length;
   const flipped = isBot
     ? (game.humanColor === 'b') !== settings.flipped
@@ -216,12 +222,21 @@ export default function Play() {
               disabled={!canUndo}
               title={
                 isBot
-                  ? 'Recuperar tu turno y cancelar la respuesta del rival'
+                  ? game.result
+                    ? 'El resultado ya está registrado'
+                    : coins < settings.botUndoCost
+                      ? `Necesitas ${settings.botUndoCost} monedas; tienes ${coins}`
+                      : `Recuperar tu turno por ${settings.botUndoCost} monedas`
                   : 'Deshacer la última jugada'
               }
             >
               <Icon name="undo" size={18} />
-              <span>Deshacer</span>
+              <span>
+                Deshacer
+                {isBot && settings.botUndoCost > 0
+                  ? ` · ${settings.botUndoCost}`
+                  : ''}
+              </span>
             </button>
             <button
               className="toolbar-button"
@@ -246,6 +261,14 @@ export default function Play() {
               <span>PGN</span>
             </button>
           </div>
+          {isBot && !game.result && settings.botUndoCost > 0 && (
+            <div className="undo-cost-note">
+              <span>
+                Deshacer: {settings.botUndoCost} monedas · Saldo: {coins}
+              </span>
+              <Link to="/ajustes">Configurar</Link>
+            </div>
+          )}
           <div className="board-footnote">
             <Icon name="info" size={15} />
             <span>
@@ -445,6 +468,7 @@ export default function Play() {
             <Piece type="k" color={game.result.winner || 'w'} />
           </div>
           <p className="result-reason">{game.result.label}</p>
+          <RewardSummary game={game} />
           <p className="muted centered">
             {game.moves.length} movimientos sobre el tablero.
             <br />

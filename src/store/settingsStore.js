@@ -1,33 +1,17 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { createPersistStorage } from '../storage';
+import { DEFAULT_SETTINGS, validateSettings } from '../core/settings';
 
-export const DEFAULT_SETTINGS = {
-  theme: 'light',
-  showLegal: true,
-  autoFlip: false,
-  flipped: false,
-  colorblind: false,
-};
-export function validateSettings(value) {
-  if (
-    !value ||
-    !['light', 'dark'].includes(value.theme) ||
-    ['showLegal', 'autoFlip', 'flipped', 'colorblind'].some(
-      (key) => typeof value[key] !== 'boolean',
-    )
-  )
-    throw new Error('Ajustes no válidos.');
-  return Object.fromEntries(
-    Object.keys(DEFAULT_SETTINGS).map((key) => [key, value[key]]),
-  );
-}
+export { DEFAULT_SETTINGS, validateSettings } from '../core/settings';
+
 export const useSettingsStore = create(
   persist(
-    (set) => ({
+    (set, get) => ({
       ...DEFAULT_SETTINGS,
       update: (key, value) => {
-        if (key in DEFAULT_SETTINGS) set({ [key]: value });
+        if (key in DEFAULT_SETTINGS)
+          set(validateSettings({ ...get(), [key]: value }));
       },
       importSettings: (value) => set(validateSettings(value)),
     }),

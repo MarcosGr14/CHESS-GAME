@@ -2,9 +2,9 @@
 
 Ajedrez clásico en español, para dos personas en el mismo dispositivo o contra diez rivales con Stockfish WASM. React 18 + Vite + JavaScript, con todas las reglas de tablero delegadas a chess.js 1.4.0.
 
-## Entrega: fases 1 y 2
+## Entrega: fases 1, 2 y 3
 
-Implementadas la base local y la integración de Stockfish. La fase 2 incluye diez bots, selección de blancas/negras/al azar, desbloqueos por victoria, cancelación de búsquedas y guardado compatible con la fase 1. La guía rápida es una referencia de reglas. XP, monedas, Elo del jugador, tienda y modos educativos interactivos se implementarán en sus fases correspondientes.
+Implementadas la base local, Stockfish y la progresión del jugador. Incluye diez bots, elección de color, desbloqueos por victoria o nivel, perfil, XP, rangos, Elo interno, monedas y respaldos completos. La tienda y los modos educativos interactivos corresponden a las siguientes fases.
 
 ### Instalación y desarrollo
 
@@ -33,11 +33,11 @@ npm run preview       # Sirve la compilación
 1. Entra en **Jugar**. El tablero inicial permite jugar sin tiempo inmediatamente.
 2. Selecciona una pieza y un destino, o arrástrala. Con teclado, Tab entra al tablero, las flechas navegan, Enter/Espacio seleccionan y mueven, y Escape cancela la selección.
 3. **Nueva partida** permite escribir los nombres y elegir sin tiempo, 3+2, 5+0, 10+0 o 15+10. Reemplazar una partida requiere comenzar desde ese diálogo; se recomienda exportar antes su PGN.
-4. Prueba el mate `1. f3 e5 2. g4 Qh4#`. Se muestra el resultado y se bloquean movimientos posteriores. **Deshacer** permite volver a jugar.
+4. Prueba el mate `1. f3 e5 2. g4 Qh4#`. Se muestra el resultado y se bloquean movimientos posteriores. **Deshacer** permite volver a jugar en modo local; los resultados contra bots son definitivos.
 5. Para enrocar, juega `1. e4 e5 2. Nf3 Nc6 3. Bc4 Nf6 4. O-O`; mueve el rey e1→g1, la torre se mueve automáticamente. Para captura al paso: `1. e4 a6 2. e5 d5 3. exd6`.
 6. **Girar tablero** cambia la orientación. En Ajustes se puede activar el giro en cada turno, ocultar destinos legales, cambiar el tema y usar el tablero de alto contraste.
 7. Recarga: se recuperan posición, planilla, relojes, resultado y ajustes. El historial completo conserva la repetición triple.
-8. **PGN** descarga una partida con nombres, fecha, jugadas y resultado. **Ajustes → Exportar copia** genera un JSON para restaurar partida y ajustes en otro navegador. La importación valida todo antes de solicitar reemplazar el guardado.
+8. **PGN** descarga una partida con nombres, fecha, jugadas y resultado. **Ajustes → Exportar copia** genera un JSON para restaurar partida, ajustes, rivales y perfil completo en otro navegador. La importación valida todo antes de solicitar reemplazar el guardado.
 
 La partida termina automáticamente por mate, ahogado, material insuficiente, repetición triple y regla de 50 movimientos. También admite rendición, tablas de mutuo acuerdo y pérdida por tiempo. Si el rival solo tiene rey, el tiempo agotado se adjudica como tablas.
 
@@ -55,21 +55,21 @@ La partida termina automáticamente por mate, ahogado, material insuficiente, re
 
 ```text
 src/
-  core/        Reglas, relojes, bots, migración pura de partidas, PGN y validación
+  core/        Reglas, relojes, bots, XP, monedas, Elo, respaldos y validación pura
   data/        Catálogo de diez bots
   engine/      Bootstrap Worker, cliente UCI y coordinador de turnos
   storage/     Interfaz, LocalStorageAdapter y migraciones de esquema
-  store/       Zustand + persist: game, settings y bot (rivales vencidos)
+  store/       Zustand + persist: game, settings, bot y profile
   components/  Tablero, piezas SVG originales, jugadores, planilla, diálogos e iconos
-  pages/       Inicio, sala de juego, guía de reglas y ajustes
+  pages/       Inicio, sala de juego, perfil, guía de reglas y ajustes
   styles/      Tokens de diseño y estilos responsive
 ```
 
-**La UI y los stores no acceden a localStorage.** `src/storage/index.js` configura el adaptador y conecta Zustand mediante un `PersistStorage` que expone `getItem`, `setItem` y `removeItem`. La interfaz del adaptador incluye `getGame/saveGame`, `getSettings/saveSettings` y `getProfile/saveProfile`, preparada para las siguientes fases. Se pueden devolver promesas al sustituir el adaptador; la futura implementación remota deberá exponer un estado de hidratación para que la UI espere su lectura inicial.
+**La UI y los stores no acceden a localStorage.** `src/storage/index.js` configura el adaptador y conecta Zustand mediante un `PersistStorage` que expone `getItem`, `setItem` y `removeItem`. La interfaz del adaptador incluye `getGame/saveGame`, `getSettings/saveSettings` y `getProfile/saveProfile`, utilizada por el perfil de la fase 3. Se pueden devolver promesas al sustituir el adaptador; la futura implementación remota deberá exponer un estado de hidratación para que la UI espere su lectura inicial.
 
 Cada registro se envuelve en `{ schemaVersion, data }`; `migrations.js` centraliza su lectura y migraciones. El estado de partida también contiene `schemaVersion`. Las versiones desconocidas y los datos corruptos se rechazan sin romper la interfaz. Añade migraciones explícitas al cambiar el esquema; no basta con incrementar el número. El historial se reconstruye con chess.js, sin confiar en SAN o capturas importadas.
 
-La lógica de juego y tiempo es pura en `src/core/game.js`. El almacén solo coordina acciones, fechas y persistencia. Al añadir progreso, toda la economía debe seguir en módulos puros dentro de `core/`, sin dependencias de React ni almacenamiento.
+La lógica de juego y tiempo es pura en `src/core/game.js`. El almacén solo coordina acciones, fechas y persistencia. La economía y los respaldos también son funciones puras en `core/`, sin dependencias de React ni almacenamiento.
 
 ### Dependencias
 
@@ -101,7 +101,7 @@ Configura estos valores al conectar el repositorio en Cloudflare Pages. No se ne
 
 La dirección es **Editorial greeting**, semilla `1728893013`, con paleta y tipografías del documento: marfil, nogal, fieltro verde y oro antiguo. El tablero y la planilla son los elementos distintivos; no hay estadísticas inventadas. La cuadrícula de la pantalla de juego sigue las reglas de detalle, sin imponer los bloques de métricas de una página de inicio.
 
-Se han verificado reglas, relojes, guardado, migraciones, bots y UCI con 89 pruebas automatizadas (incluyen 11 pruebas con el motor WASM real). La revisión en el navegador incluye partida completa hasta mate, arrastre real, jugada con teclado, recarga, deshacer, pausa, PGN, exportación/importación JSON, modos claro/oscuro y anchos de escritorio, tableta y móvil. Véase `docs/phase-1-validation.md` para los resultados y límites de la comprobación.
+Se han verificado reglas, relojes, guardado, migraciones, bots y UCI con 157 pruebas automatizadas (incluyen 11 pruebas con el motor WASM real). La revisión en el navegador incluye partida completa hasta mate, arrastre real, jugada con teclado, recarga, deshacer, pausa, PGN, exportación/importación JSON, modos claro/oscuro y anchos de escritorio, tableta y móvil. Véanse los informes de validación de cada fase en `docs/` para resultados y límites.
 
 La validación visual en un navegador con tamaño móvil no sustituye una prueba física. Queda comprobar en Android/iOS el gesto táctil, el notch, el teclado y la rotación. No se afirma una puntuación Lighthouse; esa auditoría pertenece al pulido de la fase 7.
 
@@ -109,7 +109,7 @@ La validación visual en un navegador con tamaño móvil no sustituye una prueba
 
 En **Jugar → Nueva partida → Contra la máquina**, elige a Nilo y tu color. Al azar resuelve el color una vez al comenzar y lo guarda. Si eliges negras, el bot hace el primer movimiento; el tablero conserva tu perspectiva aunque esté activado el giro automático local. Puedes girarlo manualmente.
 
-Nilo está disponible desde el inicio. Vencerlo abre la mesa de Clara, y así sucesivamente hasta Elena. Los desbloqueos se guardan por separado y se incluyen en los respaldos. La función pura `isBotUnlocked` también admite un nivel de jugador para conectarla con la progresión de la fase 3; en esta fase, el camino disponible es vencer al rival anterior.
+Nilo está disponible desde el inicio. Vencerlo abre la mesa de Clara, y así sucesivamente hasta Elena. Los desbloqueos se guardan por separado y se incluyen en los respaldos. También se puede acceder a un rival cuyo nivel sea igual o inferior al del jugador. Ambos caminos funcionan en la fase 3.
 
 | Nivel | Rival | Elo orientativo | Skill Level | Profundidad máxima | Tiempo máximo (ms) | Error deliberado |
 | ----- | ----- | --------------- | ----------- | ------------------ | ------------------ | ---------------- |
@@ -124,7 +124,7 @@ Nilo está disponible desde el inicio. Vencerlo abre la mesa de Clara, y así su
 | 9     | León  | 2000            | 18          | 15                 | 1900               | 0 %              |
 | 10    | Elena | 2200            | 20          | 18                 | 2400               | 0 %              |
 
-Los valores Elo describen la dificultad pretendida: no son ratings calibrados ni el futuro Elo interno del jugador. Cada turno se consulta a Stockfish; después, la rama de error puede sustituir su elección por otra jugada legal proporcionada por chess.js. Se conservan promociones, respuestas obligadas y reglas completas. Los nombres y personalidades son contenido original; no representan estilos de apertura calibrados.
+Los valores Elo describen la dificultad pretendida: no son ratings calibrados ni una clasificación competitiva oficial del jugador. Cada turno se consulta a Stockfish; después, la rama de error puede sustituir su elección por otra jugada legal proporcionada por chess.js. Se conservan promociones, respuestas obligadas y reglas completas. Los nombres y personalidades son contenido original; no representan estilos de apertura calibrados.
 
 ### Motor y cancelación
 
@@ -137,7 +137,7 @@ El Worker clásico carga el motor original y recibe la URL exacta del WASM en su
 - La interfaz muestra preparación/pensamiento y solo permite mover el lado humano. La rendición siempre corresponde al humano, incluso si el bot está pensando. Las ofertas de tablas quedan limitadas al modo local.
 - Si falla el motor, la partida se pausa y muestra **Reintentar motor**. Tanto la inicialización como la búsqueda tienen tiempo límite. Los errores asíncronos de descarga WASM se comunican inmediatamente desde el bootstrap.
 - Un pequeño tiempo de respuesta visible (hasta 550 ms) también se puede cancelar y se reduce con poco tiempo en el reloj. Los botones siguen utilizables mientras calcula el Worker.
-- Deshacer sigue siendo gratuito en esta fase. El costo configurable en monedas corresponde a la economía de la fase 3.
+- Desde la fase 3, deshacer cuesta 5 monedas por defecto; se puede configurar como gratis, 5, 10 o 20 monedas. No se cobra si no hay turno para deshacer o falta saldo. En modo local siempre es gratuito.
 
 ### Guardado y compatibilidad
 
@@ -156,3 +156,23 @@ La revisión de navegador incluye la compilación de producción, apertura al el
 ### Stockfish y sus avisos
 
 Los binarios originales de [Stockfish.js 19.0.1](https://github.com/nmrugg/stockfish.js/tree/v19.0.1) se distribuyen sin modificar bajo GPL-3.0. El build incluye `engine/COPYING.txt` y `engine/SOURCE.txt`, con enlace al código fuente correspondiente y sus instrucciones de compilación. El protocolo utilizado está documentado en la [referencia UCI oficial de Stockfish](https://official-stockfish.github.io/docs/stockfish-wiki/UCI-&-Commands.html).
+
+## Fase 3: tu progreso
+
+Abre **Perfil** para ver nivel, barra de XP, rango, Elo, monedas, estadísticas y los últimos 20 resultados. Puedes cambiar el nombre. El resumen de progreso aparece al terminar contra un bot; la navegación y el inicio muestran el mismo saldo y nivel. Los logros se incorporarán en la fase 6.
+
+- El nivel empieza en 1. Pasar de n a n+1 cuesta `round(100 * n^1.5)` XP: 100, 283, 520… El sobrante pasa al siguiente nivel.
+- Rangos: Peón desde nivel 1; Caballo 5; Alfil 10; Torre 20; Dama 35; Rey 50.
+- Una partida contra bot da 10 XP por jugar. Ganar añade 50 × multiplicador (1 a 3 según el nivel del bot); tablas añaden 25 XP. Victoria: 20 a 100 monedas; tablas: 10; derrota: 0.
+- Se exige al menos un movimiento humano para registrar estadísticas, XP, monedas o Elo. Rendirse antes de mover no genera progreso. Las partidas locales tampoco afectan al perfil.
+- Por cada bot y fecha local, las primeras cinco partidas aplican factores 100 %, 100 %, 75 %, 50 % y 25 % a XP y monedas, redondeando hacia abajo. Las siguientes dan cero; las estadísticas y el Elo siguen actualizándose. También cuentan las derrotas para no obtener XP ilimitada al rendirse repetidamente.
+- Elo inicial 800, fórmula logística de diferencia de 400, K=32 y límites 100–4000. Es una referencia interna; la dificultad orientativa de los bots no es una calibración competitiva.
+- Deshacer contra bots recupera un turno humano completo por un único descuento configurable. Si no alcanza el saldo, no cambia el tablero ni se descuentan monedas. Un resultado registrado contra bot es definitivo; empieza otra partida para volver a jugar.
+
+Cada resultado se liquida una sola vez por ID: XP, saldo, Elo, estadísticas y marca de procesamiento se guardan juntos en el perfil. La recarga recupera una liquidación pendiente si se guardó antes la partida. Reimportar el mismo resultado no vuelve a pagarlo. Se conserva un registro completo de IDs procesados aunque la lista visible solo muestre 20 partidas.
+
+La partida y los nuevos respaldos JSON usan **esquema 3**; el perfil nace en **esquema 1**. El sobre del adaptador sigue en versión 1. Se aceptan respaldos 1 y 2: conservan el perfil actual, migran partidas en curso y no premian finales antiguos. Un respaldo 3 restaura el perfil completo y avisa antes de reemplazarlo. Toda la copia se valida antes de aplicar cambios; los relojes se congelan como en fases anteriores.
+
+Las tasas de lecciones, puzzles, misiones y torneos están definidas en `core/rewards.js`; sus flujos de completado y entrega se conectarán en sus respectivas fases. Esta entrega no incorpora tienda ni actividades ficticias.
+
+Para comprobarlo: termina una partida contra un bot, abre **Perfil**, recarga y verifica que el resultado y saldo no cambian. Exporta un respaldo en Ajustes y restáuralo: no se duplica el premio. Con saldo disponible, mueve y usa **Deshacer** para ver el descuento. `npm test` comprueba curva de niveles, rangos, Elo, antifarmeo, monedero, liquidación única, deshacer, persistencia y respaldos. Detalle: [validación de fase 3](docs/phase-3-validation.md).

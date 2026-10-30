@@ -3,6 +3,9 @@ import { useGameStore } from './gameStore';
 import { useBotStore } from './botStore';
 import { storage } from '../storage';
 import { restoreChess } from '../core/game';
+import { useProfileStore } from './profileStore';
+import { createProfile } from '../core/profile';
+import { useSettingsStore } from './settingsStore';
 
 const state = () => useGameStore.getState();
 function start(color = 'w') {
@@ -17,6 +20,10 @@ function token() {
 }
 const botMove = (move) => state().botMove(move, token());
 beforeEach(() => {
+  useProfileStore
+    .getState()
+    .importProfile(createProfile('2026-10-29T10:00:00.000Z'));
+  useSettingsStore.getState().update('botUndoCost', 0);
   useBotStore
     .getState()
     .importOpponents({ schemaVersion: 1, defeatedBots: [] });
@@ -157,7 +164,7 @@ describe('Una partida entre el jugador y el bot', () => {
     delete old.humanColor;
     storage.saveGame({ version: 1, state: JSON.parse(JSON.stringify(old)) });
     await useGameStore.persist.rehydrate();
-    expect(state().schemaVersion).toBe(2);
+    expect(state().schemaVersion).toBe(3);
     expect(state().mode).toBe('local');
     expect(typeof state().move).toBe('function');
   });

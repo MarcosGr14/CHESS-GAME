@@ -41,6 +41,8 @@ export function createGame(
     TIME_CONTROLS.find((item) => item.id === timeControl) || TIME_CONTROLS[0];
   return {
     schemaVersion: GAME_SCHEMA_VERSION,
+    progressTracking: true,
+    finishedAt: null,
     id:
       globalThis.crypto?.randomUUID?.() ||
       `game-${Date.now()}-${Math.random().toString(36).slice(2)}`,
@@ -155,6 +157,7 @@ export function applyMove(state, move, now = Date.now()) {
       ...state,
       remaining: getClock(state, now),
       result: timeout,
+      finishedAt: new Date(now).toISOString(),
       lastTick: null,
       drawOffer: null,
     };
@@ -190,6 +193,7 @@ export function applyMove(state, move, now = Date.now()) {
     started: true,
     lastTick: result || state.timeControl === 'unlimited' ? null : now,
     result,
+    finishedAt: result ? new Date(now).toISOString() : null,
     drawOffer: null,
   };
 }
@@ -208,6 +212,7 @@ export function undoMove(state, now = Date.now()) {
         ? now
         : null,
     result: null,
+    finishedAt: null,
     drawOffer: null,
   };
 }
@@ -268,6 +273,13 @@ export function validateGame(value) {
     value.moves.length > 10000
   )
     throw new Error('Partida no válida.');
+  if (
+    typeof value.progressTracking !== 'boolean' ||
+    (value.finishedAt !== null &&
+      (typeof value.finishedAt !== 'string' ||
+        !Number.isFinite(Date.parse(value.finishedAt))))
+  )
+    throw new Error('Registro de progreso no válido.');
   if (
     typeof value.id !== 'string' ||
     !value.id ||
@@ -346,9 +358,14 @@ export function validateGame(value) {
   )
     throw new Error('Resultado no válido.');
   const fields = Object.keys(createGame());
+  const result = getBoardResult(chess) || value.result;
+  if (result !== null && (typeof result !== 'object' || !value.finishedAt))
+    throw new Error('Fecha de resultado no válida.');
+  if (!result && value.finishedAt !== null)
+    throw new Error('La partida todavía no ha terminado.');
   return {
     ...Object.fromEntries(fields.map((key) => [key, value[key]])),
     moves: canonical,
-    result: getBoardResult(chess) || value.result,
+    result,
   };
 }

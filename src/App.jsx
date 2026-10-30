@@ -9,16 +9,22 @@ import Play from './pages/Play';
 import Settings from './pages/Settings';
 import Guide from './pages/Guide';
 import { useBotOpponent } from './engine/useBotOpponent';
+import Profile from './pages/Profile';
+import ProfileShortcut from './components/ProfileShortcut';
+import { useProfileStore } from './store/profileStore';
+import { formatNumber } from './lib/dates';
 
 const navigation = [
   { to: '/', label: 'Inicio', icon: 'home' },
   { to: '/jugar', label: 'Jugar', icon: 'board' },
+  { to: '/perfil', label: 'Perfil', icon: 'profile' },
   { to: '/guia', label: 'Guía rápida', icon: 'book' },
   { to: '/ajustes', label: 'Ajustes', icon: 'settings' },
 ];
 
 export default function App() {
   useBotOpponent();
+  const coins = useProfileStore((state) => state.wallet.balance);
   const theme = useSettingsStore((state) => state.theme);
   const update = useSettingsStore((state) => state.update);
   const storageError = useSyncExternalStore(subscribeStorage, getStorageError);
@@ -82,15 +88,7 @@ export default function App() {
           ))}
         </nav>
         <div className="sidebar-bottom">
-          <div className="sidebar-motto">
-            <span className="motto-mark">“</span>
-            <p>
-              En el tablero,
-              <br />
-              cada jugada cuenta.
-            </p>
-            <span>Haz que la tuya valga.</span>
-          </div>
+          <ProfileShortcut />
           <button
             className="theme-toggle"
             onClick={() => update('theme', theme === 'dark' ? 'light' : 'dark')}
@@ -106,6 +104,14 @@ export default function App() {
       <div className="mobile-header">
         <Link to="/" className="mobile-brand">
           enroque<span>.</span>
+        </Link>
+        <Link
+          to="/perfil"
+          className="mobile-wallet"
+          aria-label={`Saldo: ${formatNumber(coins)} monedas`}
+        >
+          <Icon name="coin" size={18} />
+          <span>{formatNumber(coins)}</span>
         </Link>
         <button
           className="icon-button"
@@ -126,6 +132,7 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/jugar" element={<Play />} />
           <Route path="/guia" element={<Guide />} />
+          <Route path="/perfil" element={<Profile />} />
           <Route path="/ajustes" element={<Settings />} />
           <Route
             path="*"

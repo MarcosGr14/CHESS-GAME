@@ -55,7 +55,9 @@ export default function Guide() {
           <strong>Contra la máquina:</strong> en Nueva partida, elige tu rival y
           tu color. Solo mueves tus piezas; Deshacer recupera tu última jugada y
           la respuesta del bot. Si eliges negras, el rival abre la partida. El
-          siguiente rival se desbloquea al vencer al anterior.
+          siguiente rival se desbloquea al vencer al anterior o subir de nivel.
+          Deshacer cuesta 5 monedas por defecto; puedes cambiarlo en Ajustes.
+          Los resultados contra bots son definitivos.
         </p>
         <p>
           <strong>Con el dedo o el ratón:</strong> toca una pieza y después su

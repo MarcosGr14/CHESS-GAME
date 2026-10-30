@@ -103,7 +103,7 @@ describe('Compatibilidad del guardado de la fase 1', () => {
     delete old.humanColor;
     const loaded = validateGame(old);
     expect(loaded).toMatchObject({
-      schemaVersion: 2,
+      schemaVersion: 3,
       mode: 'local',
       botId: null,
       humanColor: 'w',

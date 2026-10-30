@@ -1,12 +1,14 @@
 import { useRef, useState } from 'react';
-import { useSettingsStore, validateSettings } from '../store/settingsStore';
+import { useSettingsStore } from '../store/settingsStore';
 import { useGameStore } from '../store/gameStore';
-import { getClock, validateGame } from '../core/game';
+import { createBackup, validateBackup } from '../core/backup';
+import { useProfileStore } from '../store/profileStore';
+import { localDayKey } from '../lib/dates';
+import { UNDO_COSTS } from '../core/economy';
 import { downloadFile } from '../core/download';
 import Icon from '../components/Icon';
 import Modal from '../components/Modal';
 import { useBotStore } from '../store/botStore';
-import { validateOpponents } from '../core/bots';
 
 function Toggle({ title, detail, checked, onChange }) {
   return (
@@ -31,56 +33,30 @@ export default function Settings() {
   const [pending, setPending] = useState(null);
   const fileRef = useRef(null);
   function exportBackup() {
-    const state = useGameStore.getState();
-    const game = Object.fromEntries(
-      Object.entries(state).filter(([, value]) => typeof value !== 'function'),
-    );
-    // Backups freeze the clock so transferring a file never consumes playing time.
-    const frozen = {
-      ...game,
-      remaining: getClock(game),
-      lastTick: null,
-      paused:
-        (game.started || game.mode === 'bot') && !game.result
-          ? true
-          : game.paused,
-    };
-    const backup = {
-      app: 'enroque',
-      schemaVersion: 2,
+    const backup = createBackup({
+      game: useGameStore.getState(),
+      settings,
+      opponents: useBotStore.getState(),
+      profile: useProfileStore.getState(),
       exportedAt: new Date().toISOString(),
-      game: frozen,
-      settings: validateSettings(settings),
-      opponents: validateOpponents(useBotStore.getState()),
-    };
+    });
     downloadFile(
-      `enroque-respaldo-${new Date().toISOString().slice(0, 10)}.json`,
+      `enroque-respaldo-${localDayKey(new Date())}.json`,
       JSON.stringify(backup, null, 2),
       'application/json',
     );
-    setMessage('Copia exportada. Al importarla, la partida estará en pausa.');
+    setMessage(
+      'Copia exportada con tu perfil, monedas y partidas. Se restaurará en pausa.',
+    );
   }
   async function readBackup(event) {
     const file = event.target.files[0];
     event.target.value = '';
     if (!file) return;
     try {
-      if (file.size > 1000000)
-        throw new Error('El archivo debe pesar menos de 1 MB.');
-      const backup = JSON.parse(await file.text());
-      if (backup.app !== 'enroque' || ![1, 2].includes(backup.schemaVersion))
-        throw new Error(
-          'La copia no es compatible con esta versión de Enroque.',
-        );
-      // Validate every section before changing either store.
-      setPending({
-        game: validateGame(backup.game),
-        settings: validateSettings(backup.settings),
-        opponents:
-          backup.schemaVersion === 2
-            ? validateOpponents(backup.opponents)
-            : null,
-      });
+      if (file.size > 5000000)
+        throw new Error('El archivo debe pesar menos de 5 MB.');
+      setPending(validateBackup(JSON.parse(await file.text())));
       setMessage('');
     } catch (error) {
       setMessage(
@@ -157,6 +133,38 @@ export default function Settings() {
       </section>
       <section className="settings-section">
         <div>
+          <h2>Recuperar tu turno</h2>
+          <p className="muted">
+            Contra bots, deshacer vuelve a tu última decisión. En partidas
+            locales es gratuito.
+          </p>
+        </div>
+        <div className="settings-panel">
+          <label htmlFor="undo-cost" className="form-label">
+            Costo por deshacer contra bots
+          </label>
+          <select
+            id="undo-cost"
+            className="settings-select"
+            value={settings.botUndoCost}
+            onChange={(event) =>
+              settings.update('botUndoCost', Number(event.target.value))
+            }
+          >
+            {UNDO_COSTS.map((cost) => (
+              <option value={cost} key={cost}>
+                {cost === 0 ? 'Gratis' : `${cost} monedas`}
+              </option>
+            ))}
+          </select>
+          <p className="setting-description">
+            Se descuenta solo si se puede deshacer. Después de registrar un
+            resultado, empieza otra partida para volver a jugar.
+          </p>
+        </div>
+      </section>
+      <section className="settings-section">
+        <div>
           <h2>Tu guardado</h2>
           <p className="muted">
             La partida y los ajustes viven en este navegador. Una copia JSON
@@ -170,8 +178,8 @@ export default function Settings() {
               <strong>Un respaldo para tu tranquilidad.</strong>
               <br />
               <span className="muted">
-                Incluye el historial, los relojes y los rivales desbloqueados.
-                Las copias se exportan con la partida en pausa.
+                Incluye tu perfil, XP, Elo, monedas, estadísticas y rivales
+                desbloqueados. Las copias se exportan con la partida en pausa.
               </span>
             </p>
           </div>
@@ -203,8 +211,12 @@ export default function Settings() {
       {pending && (
         <Modal title="¿Restaurar esta copia?" onClose={() => setPending(null)}>
           <p>
-            Se reemplazarán la partida y los ajustes actuales por una copia con{' '}
-            {pending.game.moves.length} movimientos.
+            Se restaurará una partida con {pending.game.moves.length}{' '}
+            {pending.game.moves.length === 1 ? 'movimiento' : 'movimientos'} y
+            sus ajustes.{' '}
+            {pending.profile
+              ? 'También se reemplazará tu perfil completo, incluidas XP y monedas.'
+              : 'Esta copia antigua conservará el perfil y las monedas actuales.'}
           </p>
           <div className="modal-actions">
             <button
@@ -218,6 +230,8 @@ export default function Settings() {
               onClick={() => {
                 if (pending.opponents)
                   useBotStore.getState().importOpponents(pending.opponents);
+                if (pending.profile)
+                  useProfileStore.getState().importProfile(pending.profile);
                 useGameStore.getState().importGame(pending.game);
                 settings.importSettings(pending.settings);
                 setPending(null);
