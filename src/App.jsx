@@ -8,6 +8,7 @@ import Home from './pages/Home';
 import Play from './pages/Play';
 import Settings from './pages/Settings';
 import Guide from './pages/Guide';
+import { useBotOpponent } from './engine/useBotOpponent';
 
 const navigation = [
   { to: '/', label: 'Inicio', icon: 'home' },
@@ -17,6 +18,7 @@ const navigation = [
 ];
 
 export default function App() {
+  useBotOpponent();
   const theme = useSettingsStore((state) => state.theme);
   const update = useSettingsStore((state) => state.update);
   const storageError = useSyncExternalStore(subscribeStorage, getStorageError);

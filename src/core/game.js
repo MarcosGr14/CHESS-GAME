@@ -1,4 +1,6 @@
 import { Chess, DEFAULT_POSITION } from 'chess.js';
+import { getBot } from './bots';
+import { GAME_SCHEMA_VERSION, migrateGame } from './gameSchema';
 
 export const INITIAL_FEN = DEFAULT_POSITION;
 export const COLORS = { w: 'Blancas', b: 'Negras' };
@@ -33,11 +35,18 @@ export const TIME_CONTROLS = [
 export function createGame(
   timeControl = 'unlimited',
   names = { w: 'Jugador de blancas', b: 'Jugador de negras' },
+  options = {},
 ) {
   const control =
     TIME_CONTROLS.find((item) => item.id === timeControl) || TIME_CONTROLS[0];
   return {
-    schemaVersion: 1,
+    schemaVersion: GAME_SCHEMA_VERSION,
+    id:
+      globalThis.crypto?.randomUUID?.() ||
+      `game-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    mode: options.mode || 'local',
+    botId: options.mode === 'bot' ? options.botId : null,
+    humanColor: options.humanColor || 'w',
     initialFen: INITIAL_FEN,
     moves: [],
     clockHistory: [],
@@ -226,7 +235,9 @@ export function exportPgn(state) {
   const chess = restoreChess(state);
   chess.header(
     'Event',
-    'Enroque · Partida local',
+    state.mode === 'bot'
+      ? `Enroque · Contra ${getBot(state.botId)?.name}`
+      : 'Enroque · Partida local',
     'Site',
     'Local',
     'Date',
@@ -248,14 +259,24 @@ export function exportPgn(state) {
 }
 
 export function validateGame(value) {
+  value = migrateGame(value);
   if (
     !value ||
-    value.schemaVersion !== 1 ||
+    value.schemaVersion !== GAME_SCHEMA_VERSION ||
     value.initialFen !== INITIAL_FEN ||
     !Array.isArray(value.moves) ||
     value.moves.length > 10000
   )
     throw new Error('Partida no válida.');
+  if (
+    typeof value.id !== 'string' ||
+    !value.id ||
+    value.id.length > 100 ||
+    !['local', 'bot'].includes(value.mode) ||
+    !['w', 'b'].includes(value.humanColor) ||
+    (value.mode === 'bot' ? !getBot(value.botId) : value.botId !== null)
+  )
+    throw new Error('Rival o modalidad no válidos.');
   if (!TIME_CONTROLS.some((control) => control.id === value.timeControl))
     throw new Error('Reloj no válido.');
   const validRemaining = (remaining) =>

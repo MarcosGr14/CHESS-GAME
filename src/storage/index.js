@@ -10,6 +10,10 @@ export {
 
 export function createPersistStorage(record) {
   const access = {
+    opponents: {
+      get: () => storage.getOpponents(),
+      save: (value) => storage.saveOpponents(value),
+    },
     game: {
       get: () => storage.getGame(),
       save: (value) => storage.saveGame(value),

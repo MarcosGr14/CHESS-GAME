@@ -1,0 +1,122 @@
+[
+  {
+    "id": "nilo",
+    "name": "Nilo",
+    "level": 1,
+    "elo": 400,
+    "personality": "Curioso y distraído. A veces se olvida de cuidar sus piezas.",
+    "skillLevel": 0,
+    "depth": 1,
+    "thinkMs": 250,
+    "humanError": 85,
+    "unlockLevel": 1
+  },
+  {
+    "id": "clara",
+    "name": "Clara",
+    "level": 2,
+    "elo": 600,
+    "personality": "Aprende sobre la marcha y se deja llevar por las capturas.",
+    "skillLevel": 0,
+    "depth": 2,
+    "thinkMs": 350,
+    "humanError": 65,
+    "unlockLevel": 2
+  },
+  {
+    "id": "bruno",
+    "name": "Bruno",
+    "level": 3,
+    "elo": 800,
+    "personality": "Valiente al atacar, un poco descuidado al defender.",
+    "skillLevel": 2,
+    "depth": 3,
+    "thinkMs": 450,
+    "humanError": 45,
+    "unlockLevel": 3
+  },
+  {
+    "id": "alma",
+    "name": "Alma",
+    "level": 4,
+    "elo": 1000,
+    "personality": "Paciente y ordenada. Ya empieza a ver tus amenazas.",
+    "skillLevel": 4,
+    "depth": 5,
+    "thinkMs": 600,
+    "humanError": 28,
+    "unlockLevel": 4
+  },
+  {
+    "id": "tomas",
+    "name": "Tomás",
+    "level": 5,
+    "elo": 1200,
+    "personality": "Busca combinaciones y disfruta de un buen sacrificio.",
+    "skillLevel": 7,
+    "depth": 7,
+    "thinkMs": 750,
+    "humanError": 16,
+    "unlockLevel": 5
+  },
+  {
+    "id": "ines",
+    "name": "Inés",
+    "level": 6,
+    "elo": 1400,
+    "personality": "Cuida su posición y convierte pequeños detalles en ventajas.",
+    "skillLevel": 10,
+    "depth": 9,
+    "thinkMs": 950,
+    "humanError": 8,
+    "unlockLevel": 6
+  },
+  {
+    "id": "dario",
+    "name": "Darío",
+    "level": 7,
+    "elo": 1600,
+    "personality": "Tenaz y preciso. Castiga las piezas que quedan sueltas.",
+    "skillLevel": 13,
+    "depth": 11,
+    "thinkMs": 1200,
+    "humanError": 3,
+    "unlockLevel": 7
+  },
+  {
+    "id": "vera",
+    "name": "Vera",
+    "level": 8,
+    "elo": 1800,
+    "personality": "Una rival serena que calcula antes de comprometerse.",
+    "skillLevel": 16,
+    "depth": 13,
+    "thinkMs": 1500,
+    "humanError": 0,
+    "unlockLevel": 8
+  },
+  {
+    "id": "leon",
+    "name": "León",
+    "level": 9,
+    "elo": 2000,
+    "personality": "Exigente en cada fase. No regala segundas oportunidades.",
+    "skillLevel": 18,
+    "depth": 15,
+    "thinkMs": 1900,
+    "humanError": 0,
+    "unlockLevel": 9
+  },
+  {
+    "id": "elena",
+    "name": "Elena",
+    "level": 10,
+    "elo": 2200,
+    "personality": "La última mesa del club. Precisión, paciencia y ambición.",
+    "skillLevel": 20,
+    "depth": 18,
+    "thinkMs": 2400,
+    "humanError": 0,
+    "unlockLevel": 10
+  }
+]

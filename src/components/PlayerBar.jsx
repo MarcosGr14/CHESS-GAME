@@ -10,6 +10,8 @@ export default function PlayerBar({
   timed,
   moves,
   advantage,
+  detail,
+  thinking = false,
 }) {
   const captures = moves
     .filter((move) => move.color === color && move.captured)
@@ -43,7 +45,12 @@ export default function PlayerBar({
               ))}
             </span>
           ) : (
-            <span>{color === 'w' ? 'Piezas blancas' : 'Piezas negras'}</span>
+            <span>
+              {thinking
+                ? 'Pensando…'
+                : detail ||
+                  (color === 'w' ? 'Piezas blancas' : 'Piezas negras')}
+            </span>
           )}
           {advantage > 0 && (
             <span

@@ -5,6 +5,8 @@ import { getClock, validateGame } from '../core/game';
 import { downloadFile } from '../core/download';
 import Icon from '../components/Icon';
 import Modal from '../components/Modal';
+import { useBotStore } from '../store/botStore';
+import { validateOpponents } from '../core/bots';
 
 function Toggle({ title, detail, checked, onChange }) {
   return (
@@ -38,14 +40,18 @@ export default function Settings() {
       ...game,
       remaining: getClock(game),
       lastTick: null,
-      paused: game.started && !game.result ? true : game.paused,
+      paused:
+        (game.started || game.mode === 'bot') && !game.result
+          ? true
+          : game.paused,
     };
     const backup = {
       app: 'enroque',
-      schemaVersion: 1,
+      schemaVersion: 2,
       exportedAt: new Date().toISOString(),
       game: frozen,
       settings: validateSettings(settings),
+      opponents: validateOpponents(useBotStore.getState()),
     };
     downloadFile(
       `enroque-respaldo-${new Date().toISOString().slice(0, 10)}.json`,
@@ -62,7 +68,7 @@ export default function Settings() {
       if (file.size > 1000000)
         throw new Error('El archivo debe pesar menos de 1 MB.');
       const backup = JSON.parse(await file.text());
-      if (backup.app !== 'enroque' || backup.schemaVersion !== 1)
+      if (backup.app !== 'enroque' || ![1, 2].includes(backup.schemaVersion))
         throw new Error(
           'La copia no es compatible con esta versión de Enroque.',
         );
@@ -70,6 +76,10 @@ export default function Settings() {
       setPending({
         game: validateGame(backup.game),
         settings: validateSettings(backup.settings),
+        opponents:
+          backup.schemaVersion === 2
+            ? validateOpponents(backup.opponents)
+            : null,
       });
       setMessage('');
     } catch (error) {
@@ -139,7 +149,7 @@ export default function Settings() {
           />
           <Toggle
             title="Girar automáticamente"
-            detail="Al cambiar de turno, las piezas del jugador activo quedan abajo."
+            detail="En partidas locales, el jugador activo queda abajo. Contra bots, conservas tu lado."
             checked={settings.autoFlip}
             onChange={(value) => settings.update('autoFlip', value)}
           />
@@ -160,8 +170,8 @@ export default function Settings() {
               <strong>Un respaldo para tu tranquilidad.</strong>
               <br />
               <span className="muted">
-                Incluye el historial completo y los relojes. Las copias se
-                exportan con la partida en pausa.
+                Incluye el historial, los relojes y los rivales desbloqueados.
+                Las copias se exportan con la partida en pausa.
               </span>
             </p>
           </div>
@@ -206,6 +216,8 @@ export default function Settings() {
             <button
               className="button primary"
               onClick={() => {
+                if (pending.opponents)
+                  useBotStore.getState().importOpponents(pending.opponents);
                 useGameStore.getState().importGame(pending.game);
                 settings.importSettings(pending.settings);
                 setPending(null);

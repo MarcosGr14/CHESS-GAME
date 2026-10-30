@@ -9,108 +9,179 @@ import {
   undoMove,
   validateGame,
 } from '../core/game';
+import { getBot, isBotUnlocked, otherColor, undoHumanTurn } from '../core/bots';
 import { createPersistStorage, reportStorageError } from '../storage';
+import { useBotStore } from './botStore';
+
+function rememberVictory(state) {
+  if (state.mode === 'bot' && state.result?.winner === state.humanColor)
+    useBotStore.getState().recordVictory(state.botId);
+}
 
 export const useGameStore = create(
   persist(
-    (set, get) => ({
-      ...createGame(),
-      newGame: (timeControl, names) => set(createGame(timeControl, names)),
-      move: (move) => {
-        const next = applyMove(get(), move);
-        if (!next) return false;
-        set(next);
-        return true;
-      },
-      undo: () => {
-        const next = undoMove(get());
-        if (next) set(next);
-      },
-      checkTimeout: () => {
-        const state = get();
-        const now = Date.now();
-        const result = getTimeout(state, now);
-        if (result)
-          set({
+    (set, get) => {
+      // Every change invalidates in-flight answers, including returning to an old FEN.
+      const commit = (patch) => {
+        set({ ...patch, revision: get().revision + 1 });
+        rememberVictory(get());
+      };
+      return {
+        ...createGame(),
+        revision: 0,
+        newGame: (timeControl, names, options = {}) => {
+          if (
+            options.mode === 'bot' &&
+            !isBotUnlocked(
+              getBot(options.botId),
+              useBotStore.getState().defeatedBots,
+            )
+          )
+            return false;
+          commit(createGame(timeControl, names, options));
+          return true;
+        },
+        move: (move) => {
+          const state = get();
+          if (
+            state.mode === 'bot' &&
+            restoreChess(state).turn() !== state.humanColor
+          )
+            return false;
+          const next = applyMove(state, move);
+          if (!next) return false;
+          commit(next);
+          return true;
+        },
+        botMove: (move, token) => {
+          const state = get();
+          if (
+            !token ||
+            state.mode !== 'bot' ||
+            state.id !== token.id ||
+            state.revision !== token.revision ||
+            restoreChess(state).turn() === state.humanColor
+          )
+            return false;
+          const next = applyMove(state, move);
+          if (!next) return false;
+          commit(next);
+          return true;
+        },
+        undo: () => {
+          const next = undoHumanTurn(get(), undoMove, Date.now());
+          if (next) commit(next);
+        },
+        checkTimeout: () => {
+          const state = get();
+          const now = Date.now();
+          const result = getTimeout(state, now);
+          if (result)
+            commit({
+              remaining: getClock(state, now),
+              result,
+              lastTick: null,
+              drawOffer: null,
+            });
+        },
+        togglePause: () => {
+          const state = get();
+          if (state.result || (!state.started && state.mode !== 'bot')) return;
+          const now = Date.now();
+          const timeout = getTimeout(state, now);
+          if (timeout) {
+            commit({
+              result: timeout,
+              remaining: getClock(state, now),
+              lastTick: null,
+              drawOffer: null,
+            });
+            return;
+          }
+          commit({
             remaining: getClock(state, now),
-            result,
-            lastTick: null,
-            drawOffer: null,
+            paused: !state.paused,
+            lastTick:
+              state.paused && state.started && state.timeControl !== 'unlimited'
+                ? now
+                : null,
           });
-      },
-      togglePause: () => {
-        const state = get();
-        if (state.result || !state.started) return;
-        const now = Date.now();
-        const timeout = getTimeout(state, now);
-        if (timeout) {
-          set({
-            result: timeout,
-            remaining: getClock(state, now),
-            lastTick: null,
-          });
-          return;
-        }
-        set({
-          remaining: getClock(state, now),
-          paused: !state.paused,
-          lastTick:
-            state.paused && state.timeControl !== 'unlimited' ? now : null,
-        });
-      },
-      resign: () => {
-        const state = get();
-        if (state.result || state.paused) return;
-        const result = getTimeout(state) || {
-          winner: restoreChess(state).turn() === 'w' ? 'b' : 'w',
-          reason: 'resignation',
-          label: 'Rendición',
-        };
-        set({
-          result,
-          remaining: getClock(state),
-          lastTick: null,
-          drawOffer: null,
-        });
-      },
-      offerDraw: () => {
-        const state = get();
-        if (!state.result && !state.paused)
-          set({ drawOffer: restoreChess(state).turn() });
-      },
-      respondDraw: (accept) => {
-        const state = get();
-        if (!state.drawOffer || state.result || state.paused) return;
-        const timeout = getTimeout(state);
-        if (timeout || accept)
-          set({
-            result: timeout || {
-              winner: null,
-              reason: 'agreement',
-              label: 'Tablas de mutuo acuerdo',
+        },
+        resign: () => {
+          const state = get();
+          if (state.result || state.paused) return;
+          const color =
+            state.mode === 'bot'
+              ? state.humanColor
+              : restoreChess(state).turn();
+          commit({
+            result: getTimeout(state) || {
+              winner: otherColor(color),
+              reason: 'resignation',
+              label: 'Rendición',
             },
             remaining: getClock(state),
             lastTick: null,
             drawOffer: null,
           });
-        else set({ drawOffer: null });
-      },
-      importGame: (value) => set(validateGame(value)),
-    }),
+        },
+        offerDraw: () => {
+          const state = get();
+          if (state.mode === 'local' && !state.result && !state.paused)
+            commit({ drawOffer: restoreChess(state).turn() });
+        },
+        respondDraw: (accept) => {
+          const state = get();
+          if (
+            state.mode !== 'local' ||
+            !state.drawOffer ||
+            state.result ||
+            state.paused
+          )
+            return;
+          const timeout = getTimeout(state);
+          if (timeout || accept)
+            commit({
+              result: timeout || {
+                winner: null,
+                reason: 'agreement',
+                label: 'Tablas de mutuo acuerdo',
+              },
+              remaining: getClock(state),
+              lastTick: null,
+              drawOffer: null,
+            });
+          else commit({ drawOffer: null });
+        },
+        importGame: (value) => commit(validateGame(value)),
+      };
+    },
     {
       name: 'enroque-game',
-      version: 1,
+      version: 2,
       storage: createPersistStorage('game'),
+      onRehydrateStorage: () => (state, error) => {
+        if (error)
+          reportStorageError(
+            'No se pudo migrar la partida guardada. Puedes recuperar un respaldo desde Ajustes.',
+          );
+        else if (state) rememberVictory(state);
+      },
       partialize: (state) =>
         Object.fromEntries(
           Object.entries(state).filter(
-            ([, value]) => typeof value !== 'function',
+            ([key, value]) => typeof value !== 'function' && key !== 'revision',
           ),
         ),
+      migrate: (saved) => validateGame(saved),
       merge: (saved, current) => {
         if (!saved) return current;
         try {
-          return { ...current, ...validateGame(saved) };
+          return {
+            ...current,
+            ...validateGame(saved),
+            revision: current.revision + 1,
+          };
         } catch {
           reportStorageError(
             'La partida guardada no es válida. Se abrió un tablero nuevo.',

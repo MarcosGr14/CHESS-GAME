@@ -1,0 +1,119 @@
+{
+  "date": "2026-10-29",
+  "engine": "stockfish@19.0.1 lite-single",
+  "errorSeed": 27102026,
+  "reference": {
+    "skillLevel": 20,
+    "depth": 7,
+    "thinkMs": 120
+  },
+  "games": [
+    {
+      "bot": "Nilo",
+      "level": 1,
+      "color": "w",
+      "result": "derrota",
+      "plies": 48
+    },
+    {
+      "bot": "Nilo",
+      "level": 1,
+      "color": "b",
+      "result": "derrota",
+      "plies": 45
+    },
+    {
+      "bot": "Nilo",
+      "level": 1,
+      "color": "w",
+      "result": "derrota",
+      "plies": 32
+    },
+    {
+      "bot": "Nilo",
+      "level": 1,
+      "color": "b",
+      "result": "derrota",
+      "plies": 61
+    },
+    {
+      "bot": "Clara",
+      "level": 2,
+      "color": "w",
+      "result": "derrota",
+      "plies": 22
+    },
+    {
+      "bot": "Clara",
+      "level": 2,
+      "color": "b",
+      "result": "derrota",
+      "plies": 39
+    },
+    {
+      "bot": "Clara",
+      "level": 2,
+      "color": "w",
+      "result": "derrota",
+      "plies": 54
+    },
+    {
+      "bot": "Clara",
+      "level": 2,
+      "color": "b",
+      "result": "derrota",
+      "plies": 41
+    },
+    {
+      "bot": "Bruno",
+      "level": 3,
+      "color": "w",
+      "result": "derrota",
+      "plies": 42
+    },
+    {
+      "bot": "Bruno",
+      "level": 3,
+      "color": "b",
+      "result": "derrota",
+      "plies": 43
+    },
+    {
+      "bot": "Bruno",
+      "level": 3,
+      "color": "w",
+      "result": "derrota",
+      "plies": 50
+    },
+    {
+      "bot": "Bruno",
+      "level": 3,
+      "color": "b",
+      "result": "derrota",
+      "plies": 39
+    }
+  ],
+  "summary": [
+    {
+      "bot": "Nilo",
+      "losses": 4,
+      "wins": 0,
+      "draws": 0,
+      "games": 4
+    },
+    {
+      "bot": "Clara",
+      "losses": 4,
+      "wins": 0,
+      "draws": 0,
+      "games": 4
+    },
+    {
+      "bot": "Bruno",
+      "losses": 4,
+      "wins": 0,
+      "draws": 0,
+      "games": 4
+    }
+  ]
+}

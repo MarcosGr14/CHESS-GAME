@@ -17,79 +17,17 @@ import Modal from '../components/Modal';
 import MoveList from '../components/MoveList';
 import PlayerBar from '../components/PlayerBar';
 import Piece from '../components/Piece';
-
-function NewGameForm({ current, onStart }) {
-  const [control, setControl] = useState(current.timeControl);
-  const [names, setNames] = useState(current.names);
-  return (
-    <form
-      onSubmit={(event) => {
-        event.preventDefault();
-        onStart(control, {
-          w: names.w.trim() || 'Jugador de blancas',
-          b: names.b.trim() || 'Jugador de negras',
-        });
-      }}
-    >
-      <p className="muted">
-        Dos personas, un tablero y todas las posibilidades.
-      </p>
-      <div className="name-fields">
-        {['w', 'b'].map((color) => (
-          <label key={color}>
-            {COLORS[color]}
-            <input
-              maxLength={32}
-              value={names[color]}
-              onChange={(event) =>
-                setNames({ ...names, [color]: event.target.value })
-              }
-              autoComplete="off"
-            />
-          </label>
-        ))}
-      </div>
-      <fieldset className="time-fieldset">
-        <legend>Ritmo de juego</legend>
-        <div className="time-options">
-          {TIME_CONTROLS.map((item) => (
-            <label
-              className={`time-option ${control === item.id ? 'chosen' : ''}`}
-              key={item.id}
-            >
-              <input
-                type="radio"
-                name="time"
-                value={item.id}
-                checked={control === item.id}
-                onChange={() => setControl(item.id)}
-              />
-              <span>{item.label}</span>
-              <small>{item.detail}</small>
-            </label>
-          ))}
-        </div>
-      </fieldset>
-      <p className="small muted">
-        El primer número son minutos por persona; el segundo, segundos añadidos
-        por jugada. El reloj empieza con el primer movimiento.
-      </p>
-      {current.moves.length > 0 && (
-        <p className="replacement-note">
-          <Icon name="info" size={16} /> La nueva partida reemplazará la actual.
-          Puedes guardar antes su PGN.
-        </p>
-      )}
-      <button className="button primary full-width" type="submit">
-        Comenzar partida <Icon name="arrow" size={18} />
-      </button>
-    </form>
-  );
-}
+import NewGameForm from '../components/NewGameForm';
+import { getBot, otherColor } from '../core/bots';
+import { retryEngine, useEngineStore } from '../engine/useBotOpponent';
 
 export default function Play() {
   const game = useGameStore();
   const settings = useSettingsStore();
+  const engine = useEngineStore();
+  const bot = getBot(game.botId);
+  const isBot = game.mode === 'bot';
+  const engineError = engine.gameId === game.id ? engine.error : '';
   const { initialFen, moves } = game;
   const chess = useMemo(
     () => restoreChess({ initialFen, moves }),
@@ -99,9 +37,16 @@ export default function Play() {
   const [modal, setModal] = useState(null);
   const [promotion, setPromotion] = useState(null);
   const turn = chess.turn();
-  const flipped = settings.autoFlip
-    ? (turn === 'b') !== settings.flipped
-    : settings.flipped;
+  const botTurn = isBot && turn !== game.humanColor;
+  const resigningColor = isBot ? game.humanColor : turn;
+  const canUndo = isBot
+    ? game.moves.some((move) => move.color === game.humanColor)
+    : !!game.moves.length;
+  const flipped = isBot
+    ? (game.humanColor === 'b') !== settings.flipped
+    : settings.autoFlip
+      ? (turn === 'b') !== settings.flipped
+      : settings.flipped;
   const clocks = getClock(game, now);
   const balance = materialBalance(chess);
   const control = TIME_CONTROLS.find((item) => item.id === game.timeControl);
@@ -137,6 +82,7 @@ export default function Play() {
   }, [game.result]);
 
   function requestMove(from, to) {
+    if (game.paused || game.result || botTurn) return;
     const options = chess
       .moves({ square: from, verbose: true })
       .filter((move) => move.to === to);
@@ -162,7 +108,13 @@ export default function Play() {
       ? 'Partida en pausa'
       : chess.isCheck()
         ? `${COLORS[turn]} están en jaque`
-        : `Turno de ${COLORS[turn].toLowerCase()}`;
+        : botTurn
+          ? engine.status === 'loading'
+            ? `Preparando a ${bot.name}…`
+            : `${bot.name} está pensando…`
+          : isBot
+            ? 'Tu turno'
+            : `Turno de ${COLORS[turn].toLowerCase()}`;
 
   return (
     <>
@@ -179,16 +131,30 @@ export default function Play() {
         </button>
       </header>
       <div className="play-layout">
-        <section className="board-column" aria-label="Partida local">
+        <section
+          className="board-column"
+          aria-label={isBot ? `Partida contra ${bot.name}` : 'Partida local'}
+        >
           <div className="board-meta">
             <span>
-              <Icon name="users" size={16} /> 1 vs. 1 local
+              <Icon name={isBot ? 'board' : 'users'} size={16} />{' '}
+              {isBot
+                ? `Contra ${bot.name} · Nivel ${bot.level}`
+                : '1 vs. 1 local'}
             </span>
             <span>
               <Icon name="clock" size={15} /> {control.label}
             </span>
           </div>
           <PlayerBar
+            detail={
+              isBot
+                ? top === game.humanColor
+                  ? undefined
+                  : `Nivel ${bot.level} · ≈${bot.elo} Elo`
+                : undefined
+            }
+            thinking={botTurn && top !== game.humanColor && active}
             color={top}
             name={game.names[top]}
             active={active && turn === top}
@@ -203,22 +169,38 @@ export default function Play() {
               flipped={flipped}
               showLegal={settings.showLegal}
               colorblind={settings.colorblind}
-              disabled={game.paused || !!game.result || !!promotion}
+              disabled={game.paused || !!game.result || !!promotion || botTurn}
               lastMove={game.moves.at(-1)}
               onMove={requestMove}
             />
             {game.paused && (
               <div className="board-pause">
                 <Icon name="pause" size={30} />
-                <h2>Sin prisa.</h2>
-                <p>La partida te espera.</p>
-                <button className="button primary" onClick={game.togglePause}>
-                  <Icon name="play" size={16} /> Reanudar partida
+                <h2>{engineError ? 'Una pequeña pausa.' : 'Sin prisa.'}</h2>
+                <p>
+                  {engineError
+                    ? 'Recarga el motor para continuar.'
+                    : 'La partida te espera.'}
+                </p>
+                <button
+                  className="button primary"
+                  onClick={engineError ? retryEngine : game.togglePause}
+                >
+                  <Icon name="play" size={16} />{' '}
+                  {engineError ? 'Reintentar motor' : 'Reanudar partida'}
                 </button>
               </div>
             )}
           </div>
           <PlayerBar
+            detail={
+              isBot
+                ? bottom === game.humanColor
+                  ? undefined
+                  : `Nivel ${bot.level} · ≈${bot.elo} Elo`
+                : undefined
+            }
+            thinking={botTurn && bottom !== game.humanColor && active}
             color={bottom}
             name={game.names[bottom]}
             active={active && turn === bottom}
@@ -231,8 +213,12 @@ export default function Play() {
             <button
               className="toolbar-button"
               onClick={game.undo}
-              disabled={!game.moves.length}
-              title="Deshacer la última jugada"
+              disabled={!canUndo}
+              title={
+                isBot
+                  ? 'Recuperar tu turno y cancelar la respuesta del rival'
+                  : 'Deshacer la última jugada'
+              }
             >
               <Icon name="undo" size={18} />
               <span>Deshacer</span>
@@ -247,7 +233,7 @@ export default function Play() {
             <button
               className="toolbar-button"
               onClick={game.togglePause}
-              disabled={!game.started || !!game.result}
+              disabled={(!game.started && !isBot) || !!game.result}
             >
               <Icon name={game.paused ? 'play' : 'pause'} size={18} />
               <span>{game.paused ? 'Reanudar' : 'Pausar'}</span>
@@ -262,14 +248,20 @@ export default function Play() {
           </div>
           <div className="board-footnote">
             <Icon name="info" size={15} />
-            <span>Toca una pieza y su destino, o arrástrala para mover.</span>
+            <span>
+              {botTurn && active
+                ? 'Tu rival prepara su jugada. Puedes pausar o deshacer.'
+                : 'Toca una pieza y su destino, o arrástrala para mover.'}
+            </span>
           </div>
         </section>
         <aside className="game-rail" aria-label="Detalles de la partida">
           <section className="game-status">
             <div className="section-heading">
               <h2>La partida</h2>
-              <span className="small muted">Local</span>
+              <span className="small muted">
+                {isBot ? `Nivel ${bot.level}` : 'Local'}
+              </span>
             </div>
             <div
               className={`status-line ${chess.isCheck() && !game.result ? 'status-check' : ''}`}
@@ -285,9 +277,11 @@ export default function Play() {
                 ? 'Cada final es el comienzo de otra partida.'
                 : game.paused
                   ? 'El tablero y ambos relojes están detenidos.'
-                  : game.started
-                    ? `Jugada ${Math.floor(game.moves.length / 2) + 1}. El tablero es tuyo.`
-                    : 'El tablero está listo. Las blancas tienen la primera palabra.'}
+                  : botTurn
+                    ? bot.personality
+                    : game.started
+                      ? `Jugada ${Math.floor(game.moves.length / 2) + 1}. El tablero es tuyo.`
+                      : 'El tablero está listo. Las blancas tienen la primera palabra.'}
             </p>
             {game.result && (
               <button
@@ -298,18 +292,29 @@ export default function Play() {
               </button>
             )}
           </section>
+          {engineError && (
+            <div className="engine-error" role="alert">
+              <Icon name="info" size={18} />
+              <p>{engineError}</p>
+              <button className="button secondary" onClick={retryEngine}>
+                Reintentar motor
+              </button>
+            </div>
+          )}
           <MoveList moves={game.moves} />
           <div className="game-actions">
-            <button
-              className="button secondary"
-              disabled={!!game.result || game.paused}
-              onClick={() => {
-                game.offerDraw();
-                setModal('draw');
-              }}
-            >
-              <Icon name="hand" size={17} /> Ofrecer tablas
-            </button>
+            {!isBot && (
+              <button
+                className="button secondary"
+                disabled={!!game.result || game.paused}
+                onClick={() => {
+                  game.offerDraw();
+                  setModal('draw');
+                }}
+              >
+                <Icon name="hand" size={17} /> Ofrecer tablas
+              </button>
+            )}
             <button
               className="button secondary"
               disabled={!!game.result || game.paused}
@@ -344,9 +349,11 @@ export default function Play() {
         <Modal title="Una nueva partida" onClose={closeModal}>
           <NewGameForm
             current={game}
-            onStart={(time, names) => {
-              game.newGame(time, names);
-              setModal(null);
+            onStart={(time, names, options) => {
+              if (game.newGame(time, names, options)) {
+                if (options.mode === 'bot') settings.update('flipped', false);
+                setModal(null);
+              }
             }}
           />
         </Modal>
@@ -376,8 +383,9 @@ export default function Play() {
       {modal === 'resign' && (
         <Modal title="¿Terminar esta partida?" onClose={closeModal}>
           <p>
-            Las {COLORS[turn].toLowerCase()} se rendirán y las{' '}
-            {COLORS[turn === 'w' ? 'b' : 'w'].toLowerCase()} ganarán la partida.
+            Las {COLORS[resigningColor].toLowerCase()} se rendirán y las{' '}
+            {COLORS[otherColor(resigningColor)].toLowerCase()} ganarán la
+            partida.
           </p>
           <div className="modal-actions">
             <button className="button secondary" onClick={closeModal}>
@@ -424,7 +432,11 @@ export default function Play() {
         <Modal
           title={
             game.result.winner
-              ? `Ganan las ${COLORS[game.result.winner].toLowerCase()}`
+              ? isBot
+                ? game.result.winner === game.humanColor
+                  ? 'Victoria para ti'
+                  : `${bot.name} gana esta vez`
+                : `Ganan las ${COLORS[game.result.winner].toLowerCase()}`
               : 'Una partida en tablas'
           }
           onClose={closeModal}

@@ -3,11 +3,13 @@ import { restoreChess, TIME_CONTROLS } from '../core/game';
 import { useGameStore } from '../store/gameStore';
 import Icon from '../components/Icon';
 import Piece from '../components/Piece';
+import { getBot } from '../core/bots';
 
 export default function Home() {
   const game = useGameStore();
   const chess = restoreChess(game);
   const ongoing = game.moves.length > 0 && !game.result;
+  const bot = getBot(game.botId);
   return (
     <>
       <header className="page-heading">
@@ -16,14 +18,16 @@ export default function Home() {
           <h1>
             Un momento para el ajedrez<span className="title-period">.</span>
           </h1>
-          <p>Haz espacio, encuentra un rival y disfruta del tablero.</p>
+          <p>Una mesa para dos o un rival a tu medida.</p>
         </div>
       </header>
       <div className="home-layout">
         <section className="home-main">
           <div className="home-copy">
             <span className="small muted">
-              Dos personas · Un mismo dispositivo
+              {bot
+                ? `Contra ${bot.name} · En tu dispositivo`
+                : 'Dos personas · Un mismo dispositivo'}
             </span>
             <h2>
               {ongoing
@@ -33,7 +37,7 @@ export default function Home() {
             <p>
               {ongoing
                 ? `La partida entre ${game.names.w} y ${game.names.b} sigue aquí, tal como la dejaste.`
-                : 'Sin distracciones y a tu ritmo. Ajedrez clásico para compartir frente a la misma pantalla.'}
+                : 'Juega con alguien en la misma pantalla o elige entre diez rivales de distintos niveles en Nueva partida.'}
             </p>
             <Link className="button primary" to="/jugar">
               {ongoing ? 'Continuar partida' : 'Ir al tablero'}
@@ -64,7 +68,7 @@ export default function Home() {
           <dl className="game-summary">
             <div>
               <dt>Modalidad</dt>
-              <dd>1 vs. 1 local</dd>
+              <dd>{bot ? `Contra ${bot.name}` : '1 vs. 1 local'}</dd>
             </div>
             <div>
               <dt>Ritmo</dt>

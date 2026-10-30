@@ -52,6 +52,12 @@ export default function Guide() {
       <section className="guide-controls">
         <h2>Cómo mover en Enroque</h2>
         <p>
+          <strong>Contra la máquina:</strong> en Nueva partida, elige tu rival y
+          tu color. Solo mueves tus piezas; Deshacer recupera tu última jugada y
+          la respuesta del bot. Si eliges negras, el rival abre la partida. El
+          siguiente rival se desbloquea al vencer al anterior.
+        </p>
+        <p>
           <strong>Con el dedo o el ratón:</strong> toca una pieza y después su
           destino, o arrástrala. Los puntos marcan movimientos y los aros
           señalan capturas.

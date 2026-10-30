@@ -1,17 +1,21 @@
 {
   "name": "enroque",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "engines": {
     "node": ">=22.12.0"
   },
   "scripts": {
+    "postinstall": "node scripts/prepare-engine.mjs",
+    "predev": "node scripts/prepare-engine.mjs",
+    "prebuild": "node scripts/prepare-engine.mjs",
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0",
     "test": "vitest run",
     "test:watch": "vitest",
+    "bench:bots": "node scripts/benchmark-bots.mjs",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
@@ -23,6 +27,7 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^7.18.5",
+    "stockfish": "19.0.1",
     "zustand": "^5.0.16"
   },
   "devDependencies": {

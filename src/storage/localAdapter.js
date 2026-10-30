@@ -64,4 +64,10 @@ export class LocalStorageAdapter {
   saveProfile(value) {
     this.saveRecord('profile', value);
   }
+  getOpponents() {
+    return this.getRecord('opponents');
+  }
+  saveOpponents(value) {
+    this.saveRecord('opponents', value);
+  }
 }

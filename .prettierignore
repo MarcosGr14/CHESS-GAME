@@ -1,4 +1,5 @@
 dist
+public/engine
 node_modules
 .taste-skill
 test-results
