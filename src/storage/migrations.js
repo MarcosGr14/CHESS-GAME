@@ -1,6 +1,7 @@
 export const SCHEMA_VERSION = 1;
 // The game has its own pure migration, also applied to manual JSON imports.
 export { migrateGame } from '../core/gameSchema';
+export { migrateProfile } from '../core/profileSchema';
 
 // Accept legacy unwrapped records. Add future schema migrations here in order.
 export function migrateRecord(record) {

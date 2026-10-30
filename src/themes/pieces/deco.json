@@ -1,0 +1,10 @@
+{
+  "id": "pieces-deco",
+  "nombre": "Salón dorado",
+  "categoria": "piezas",
+  "precio": 180,
+  "rareza": "épico",
+  "estilo": "Art déco",
+  "descripcion": "Abanicos, pedestales escalonados y líneas de oro antiguo.",
+  "assetFolder": "deco"
+}

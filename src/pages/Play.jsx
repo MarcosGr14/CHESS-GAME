@@ -23,11 +23,13 @@ import Piece from '../components/Piece';
 import NewGameForm from '../components/NewGameForm';
 import { getBot, otherColor } from '../core/bots';
 import { retryEngine, useEngineStore } from '../engine/useBotOpponent';
+import { getShopItem } from '../data/shopItems';
 
 export default function Play() {
   const game = useGameStore();
   const settings = useSettingsStore();
   const coins = useProfileStore((state) => state.wallet.balance);
+  const equipped = useProfileStore((state) => state.collection.equipped);
   const engine = useEngineStore();
   const bot = getBot(game.botId);
   const isBot = game.mode === 'bot';
@@ -276,6 +278,14 @@ export default function Play() {
                 ? 'Tu rival prepara su jugada. Puedes pausar o deshacer.'
                 : 'Toca una pieza y su destino, o arrástrala para mover.'}
             </span>
+          </div>
+          <div className="play-skin-summary">
+            <span>
+              {getShopItem(equipped.board).nombre} ·{' '}
+              {getShopItem(equipped.pieces).nombre}
+              {settings.colorblind ? ' · Alto contraste activo' : ''}
+            </span>
+            <Link to="/tienda">Cambiar estilos</Link>
           </div>
         </section>
         <aside className="game-rail" aria-label="Detalles de la partida">

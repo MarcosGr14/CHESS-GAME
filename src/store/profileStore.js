@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware';
 import { createProfile, settleGame, validateProfile } from '../core/profile';
 import { createPersistStorage, reportStorageError } from '../storage';
 import { localDayKey } from '../lib/dates';
+import { purchaseItem, equipItem } from '../core/shop';
 
 export const useProfileStore = create(
   persist(
@@ -22,10 +23,13 @@ export const useProfileStore = create(
         return true;
       },
       importProfile: (profile) => set(validateProfile(profile)),
+      purchase: (itemId) => set(purchaseItem(get(), itemId)),
+      equip: (itemId) => set(equipItem(get(), itemId)),
     }),
     {
       name: 'enroque-profile',
-      version: 1,
+      version: 2,
+      migrate: (saved) => validateProfile(saved),
       storage: createPersistStorage('profile'),
       partialize: (state) =>
         Object.fromEntries(

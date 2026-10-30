@@ -7,6 +7,7 @@ import { getBot } from '../core/bots';
 import { useProfileStore } from '../store/profileStore';
 import XPProgress from '../components/XPProgress';
 import { getRank, getLevelProgress } from '../core/xp';
+import { getBoardStyle } from '../themes';
 
 export default function Home() {
   const game = useGameStore();
@@ -53,7 +54,12 @@ export default function Home() {
             className="home-board-link"
             aria-label="Abrir el tablero actual"
           >
-            <div className="mini-board" aria-hidden="true">
+            <div
+              className="mini-board"
+              style={getBoardStyle(profile.collection.equipped.board)}
+              data-board-theme={profile.collection.equipped.board}
+              aria-hidden="true"
+            >
               {chess.board().flatMap((row, rowIndex) =>
                 row.map((piece, colIndex) => (
                   <div

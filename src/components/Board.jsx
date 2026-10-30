@@ -1,6 +1,8 @@
 import { useRef, useState } from 'react';
 import { COLORS, PIECE_NAMES } from '../core/game';
 import Piece from './Piece';
+import { useProfileStore } from '../store/profileStore';
+import { getBoardStyle } from '../themes';
 
 const FILES = 'abcdefgh';
 export default function Board({
@@ -12,6 +14,7 @@ export default function Board({
   lastMove,
   onMove,
 }) {
+  const boardId = useProfileStore((state) => state.collection.equipped.board);
   const [selected, setSelected] = useState(null);
   const [focusSquare, setFocusSquare] = useState('e2');
   const [drag, setDrag] = useState(null);
@@ -135,7 +138,11 @@ export default function Board({
     squareRefs.current[square]?.focus();
   }
   return (
-    <div className={`board-frame ${colorblind ? 'colorblind' : ''}`}>
+    <div
+      className={`board-frame ${colorblind ? 'colorblind' : ''}`}
+      style={getBoardStyle(boardId, colorblind)}
+      data-board-theme={boardId}
+    >
       <div
         className="board"
         ref={boardRef}

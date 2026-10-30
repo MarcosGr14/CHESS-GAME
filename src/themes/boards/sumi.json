@@ -1,0 +1,22 @@
+{
+  "id": "board-sumi",
+  "nombre": "Jardín de tinta",
+  "categoria": "tableros",
+  "precio": 160,
+  "rareza": "épico",
+  "estilo": "Tinta japonesa",
+  "descripcion": "Pinceladas secas sobre papel de arroz y tinta de pino.",
+  "tokens": {
+    "--board-light": "#f2efe6",
+    "--board-dark": "#525f54",
+    "--board-edge": "#333e34",
+    "--coordinate-dark": "#3c473c",
+    "--coordinate-light": "#f9f5e8",
+    "--legal": "#26472f",
+    "--last": "#d8c773"
+  },
+  "textures": {
+    "light": "sumi-light.svg",
+    "dark": "sumi-dark.svg"
+  }
+}

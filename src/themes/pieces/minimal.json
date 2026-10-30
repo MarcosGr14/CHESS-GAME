@@ -1,0 +1,10 @@
+{
+  "id": "pieces-minimal",
+  "nombre": "Geometría",
+  "categoria": "piezas",
+  "precio": 60,
+  "rareza": "común",
+  "estilo": "Minimalista geométrico",
+  "descripcion": "Círculos, ángulos y espacios abiertos. Cada pieza, en lo esencial.",
+  "assetFolder": "minimal"
+}

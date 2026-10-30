@@ -1,0 +1,10 @@
+{
+  "id": "pieces-ink",
+  "nombre": "Trazo de tinta",
+  "categoria": "piezas",
+  "precio": 140,
+  "rareza": "raro",
+  "estilo": "Tinta a pincel",
+  "descripcion": "Contornos irregulares y marcas de pincel que conservan el gesto de la mano.",
+  "assetFolder": "ink"
+}

@@ -1,0 +1,10 @@
+{
+  "id": "pieces-pixel",
+  "nombre": "Ocho bits",
+  "categoria": "piezas",
+  "precio": 100,
+  "rareza": "raro",
+  "estilo": "Pixel art",
+  "descripcion": "Siluetas escalonadas sobre una retícula. Un pequeño homenaje al juego digital.",
+  "assetFolder": "pixel"
+}

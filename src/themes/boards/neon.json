@@ -1,0 +1,22 @@
+{
+  "id": "board-neon",
+  "nombre": "Medianoche",
+  "categoria": "tableros",
+  "precio": 220,
+  "rareza": "legendario",
+  "estilo": "Neón nocturno",
+  "descripcion": "Cian contenido, marcas de luz y profundidad de una mesa nocturna.",
+  "tokens": {
+    "--board-light": "#2b555c",
+    "--board-dark": "#152e35",
+    "--board-edge": "#0c1c22",
+    "--coordinate-dark": "#e8ffff",
+    "--coordinate-light": "#d8f2f2",
+    "--legal": "#abe5d6",
+    "--last": "#b79245"
+  },
+  "textures": {
+    "light": "neon-light.svg",
+    "dark": "neon-dark.svg"
+  }
+}

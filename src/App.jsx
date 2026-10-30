@@ -13,10 +13,12 @@ import Profile from './pages/Profile';
 import ProfileShortcut from './components/ProfileShortcut';
 import { useProfileStore } from './store/profileStore';
 import { formatNumber } from './lib/dates';
+import Shop from './pages/Shop';
 
 const navigation = [
   { to: '/', label: 'Inicio', icon: 'home' },
   { to: '/jugar', label: 'Jugar', icon: 'board' },
+  { to: '/tienda', label: 'Tienda', icon: 'shop' },
   { to: '/perfil', label: 'Perfil', icon: 'profile' },
   { to: '/guia', label: 'Guía rápida', icon: 'book' },
   { to: '/ajustes', label: 'Ajustes', icon: 'settings' },
@@ -133,6 +135,7 @@ export default function App() {
           <Route path="/jugar" element={<Play />} />
           <Route path="/guia" element={<Guide />} />
           <Route path="/perfil" element={<Profile />} />
+          <Route path="/tienda" element={<Shop />} />
           <Route path="/ajustes" element={<Settings />} />
           <Route
             path="*"
@@ -153,17 +156,19 @@ export default function App() {
         </footer>
       </main>
       <nav className="bottom-nav" aria-label="Navegación móvil">
-        {navigation.map((item) => (
-          <NavLink
-            end={item.to === '/'}
-            to={item.to}
-            key={item.to}
-            className={({ isActive }) => (isActive ? 'active' : '')}
-          >
-            <Icon name={item.icon} size={20} />
-            <span>{item.label}</span>
-          </NavLink>
-        ))}
+        {navigation
+          .filter((item) => item.to !== '/guia')
+          .map((item) => (
+            <NavLink
+              end={item.to === '/'}
+              to={item.to}
+              key={item.to}
+              className={({ isActive }) => (isActive ? 'active' : '')}
+            >
+              <Icon name={item.icon} size={20} />
+              <span>{item.label}</span>
+            </NavLink>
+          ))}
       </nav>
     </div>
   );

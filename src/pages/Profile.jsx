@@ -100,8 +100,11 @@ export default function Profile() {
           </dl>
           <p>
             Gana monedas al vencer o empatar contra bots. Puedes usarlas para
-            recuperar tu turno.
+            recuperar tu turno o elegir estilos en la tienda.
           </p>
+          <Link className="text-button" to="/tienda?inventario=1">
+            Ver mi inventario <Icon name="arrow" size={15} />
+          </Link>
         </section>
       </div>
       <div className="profile-record">

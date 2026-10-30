@@ -1,0 +1,18 @@
+{
+  "id": "board-classic",
+  "nombre": "Marfil y nogal",
+  "categoria": "tableros",
+  "precio": 0,
+  "rareza": "común",
+  "estilo": "Clásico",
+  "descripcion": "El tablero del club: casillas limpias y un marco de nogal.",
+  "tokens": {
+    "--board-light": "#e9dfca",
+    "--board-dark": "#82664a",
+    "--board-edge": "#463d30",
+    "--coordinate-dark": "#5d4c35",
+    "--coordinate-light": "#f8f2e4",
+    "--legal": "#274737",
+    "--last": "#dac66a"
+  }
+}

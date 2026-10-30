@@ -2,9 +2,9 @@
 
 Ajedrez clásico en español, para dos personas en el mismo dispositivo o contra diez rivales con Stockfish WASM. React 18 + Vite + JavaScript, con todas las reglas de tablero delegadas a chess.js 1.4.0.
 
-## Entrega: fases 1, 2 y 3
+## Entrega: fases 1 a 4
 
-Implementadas la base local, Stockfish y la progresión del jugador. Incluye diez bots, elección de color, desbloqueos por victoria o nivel, perfil, XP, rangos, Elo interno, monedas y respaldos completos. La tienda y los modos educativos interactivos corresponden a las siguientes fases.
+Implementadas la base local, Stockfish, la progresión y la tienda. Incluye diez bots, elección de color, desbloqueos, perfil, XP, rangos, Elo, monedas, inventario y seis tableros y seis sets de piezas originales. Comprar, equipar y respaldar conserva todo el progreso. Los modos educativos interactivos corresponden a la fase 5.
 
 ### Instalación y desarrollo
 
@@ -61,7 +61,8 @@ src/
   storage/     Interfaz, LocalStorageAdapter y migraciones de esquema
   store/       Zustand + persist: game, settings, bot y profile
   components/  Tablero, piezas SVG originales, jugadores, planilla, diálogos e iconos
-  pages/       Inicio, sala de juego, perfil, guía de reglas y ajustes
+  pages/       Inicio, sala de juego, tienda/inventario, perfil, guía y ajustes
+  themes/      Definiciones JSON, texturas y 72 piezas SVG originales
   styles/      Tokens de diseño y estilos responsive
 ```
 
@@ -101,7 +102,7 @@ Configura estos valores al conectar el repositorio en Cloudflare Pages. No se ne
 
 La dirección es **Editorial greeting**, semilla `1728893013`, con paleta y tipografías del documento: marfil, nogal, fieltro verde y oro antiguo. El tablero y la planilla son los elementos distintivos; no hay estadísticas inventadas. La cuadrícula de la pantalla de juego sigue las reglas de detalle, sin imponer los bloques de métricas de una página de inicio.
 
-Se han verificado reglas, relojes, guardado, migraciones, bots y UCI con 157 pruebas automatizadas (incluyen 11 pruebas con el motor WASM real). La revisión en el navegador incluye partida completa hasta mate, arrastre real, jugada con teclado, recarga, deshacer, pausa, PGN, exportación/importación JSON, modos claro/oscuro y anchos de escritorio, tableta y móvil. Véanse los informes de validación de cada fase en `docs/` para resultados y límites.
+Se han verificado reglas, relojes, guardado, migraciones, bots y UCI con 188 pruebas automatizadas (incluyen 11 pruebas con el motor WASM real). La revisión en el navegador incluye partida completa hasta mate, arrastre real, jugada con teclado, recarga, deshacer, pausa, PGN, exportación/importación JSON, modos claro/oscuro y anchos de escritorio, tableta y móvil. Véanse los informes de validación de cada fase en `docs/` para resultados y límites.
 
 La validación visual en un navegador con tamaño móvil no sustituye una prueba física. Queda comprobar en Android/iOS el gesto táctil, el notch, el teclado y la rotación. No se afirma una puntuación Lighthouse; esa auditoría pertenece al pulido de la fase 7.
 
@@ -176,3 +177,39 @@ La partida y los nuevos respaldos JSON usan **esquema 3**; el perfil nace en **e
 Las tasas de lecciones, puzzles, misiones y torneos están definidas en `core/rewards.js`; sus flujos de completado y entrega se conectarán en sus respectivas fases. Esta entrega no incorpora tienda ni actividades ficticias.
 
 Para comprobarlo: termina una partida contra un bot, abre **Perfil**, recarga y verifica que el resultado y saldo no cambian. Exporta un respaldo en Ajustes y restáuralo: no se duplica el premio. Con saldo disponible, mueve y usa **Deshacer** para ver el descuento. `npm test` comprueba curva de niveles, rangos, Elo, antifarmeo, monedero, liquidación única, deshacer, persistencia y respaldos. Detalle: [validación de fase 3](docs/phase-3-validation.md).
+
+## Fase 4: tienda y estilos
+
+Abre **Tienda** para explorar **Tableros** y **Sets de piezas**. Seleccionar un artículo solo cambia la vista previa, que muestra la posición actual de tu partida. Puedes combinar un tablero y un set antes de comprarlos, ampliar la mesa y desplegar las doce piezas. En móvil y tableta, seleccionar abre el detalle en un diálogo; en escritorio, el detalle permanece al lado del catálogo. La navegación inferior mantiene cinco destinos; la guía sigue accesible desde Inicio y Tienda.
+
+**Comprar** añade el artículo al inventario; **Equipar tablero/piezas** lo aplica. Son acciones separadas. Solo se pueden equipar artículos poseídos. Equipar es gratis y no altera las jugadas, los relojes ni el ID de la partida. El cambio se refleja en Jugar, Inicio, capturas, coronaciones y las piezas de la interfaz, y persiste al recargar. **Mi inventario** filtra lo que ya es tuyo. También puedes abrirlo desde Perfil.
+
+| Tablero           | Monedas | Material                                |
+| ----------------- | ------: | --------------------------------------- |
+| Marfil y nogal    |  Gratis | Clásico original                        |
+| Mármol del jardín |      40 | Vetas de piedra verde y blanca          |
+| Nogal de torneo   |      90 | Grano de madera y nudos                 |
+| Atlas antiguo     |     120 | Fibras, marcas de esquina y oliva       |
+| Jardín de tinta   |     160 | Pinceladas secas sobre papel            |
+| Medianoche        |     220 | Marcas de cian sobre casillas nocturnas |
+
+| Piezas           | Monedas | Arte                                 |
+| ---------------- | ------: | ------------------------------------ |
+| Staunton clásico |  Gratis | Siluetas torneadas originales        |
+| Geometría        |      60 | Figuras mínimas y espacios abiertos  |
+| Ocho bits        |     100 | Siluetas escalonadas                 |
+| Trazo de tinta   |     140 | Contornos y pinceladas irregulares   |
+| Salón dorado     |     180 | Pedestales escalonados y oro antiguo |
+| Cristal tallado  |     240 | Planos y facetas de hielo y piedra   |
+
+Los clásicos se incluyen y equipan por defecto, también al migrar de fase 3. Los 72 SVG de piezas y las diez texturas de tablero son dibujos originales del proyecto, sin imágenes externas, filtros ni dependencias nuevas. Las rarezas se identifican por texto y un borde discreto. El modo de alto contraste prevalece sobre el material del tablero en Jugar y conserva la elección para cuando lo desactives.
+
+La compra usa exclusivamente el precio del catálogo. Saldo y propiedad se calculan juntos con una función pura y se guardan en un único registro del perfil. Si falta saldo, el ID no existe o la compra está duplicada, no se entrega ni se descuenta nada. El inventario vive junto al monedero para evitar una transacción entre dos registros separados. La lógica de tienda está en `core/shop.js`; no se duplican saldo ni propiedad en otro store.
+
+El perfil pasa a **esquema 2**, con migración explícita desde el 1 que conserva XP, Elo, estadísticas y monedas. Los respaldos nuevos usan **versión 4** e incluyen propiedad y equipo; se siguen aceptando las versiones 1, 2 y 3. El esquema de partida permanece en 3 y el sobre del adaptador en 1.
+
+Para comprobarlo, gana monedas contra bots, selecciona un estilo, cómpralo y equípalo. Abre Jugar y recarga para ver que se conserva. Exporta un respaldo desde Ajustes y restáuralo para comprobar el inventario. La compra duplicada y el saldo insuficiente también están cubiertos por Vitest. [Validación de la fase 4](docs/phase-4-validation.md).
+
+### Añadir un skin
+
+Solo requiere datos y archivos: una definición JSON en `src/themes/boards/` o `src/themes/pieces/`, con sus SVG cuando correspondan. El catálogo y el cargador los descubren automáticamente, sin editar la lógica de compra, `Piece` ni `Board`. La [guía para añadir skins](docs/adding-skins.md) contiene el esquema, los nombres de archivos, los tokens de tablero y las comprobaciones.

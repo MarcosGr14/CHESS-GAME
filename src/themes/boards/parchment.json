@@ -1,0 +1,22 @@
+{
+  "id": "board-parchment",
+  "nombre": "Atlas antiguo",
+  "categoria": "tableros",
+  "precio": 120,
+  "rareza": "épico",
+  "estilo": "Pergamino antiguo",
+  "descripcion": "Fibras de papel, marcas en las esquinas y casillas de oliva.",
+  "tokens": {
+    "--board-light": "#e9dbb8",
+    "--board-dark": "#65684c",
+    "--board-edge": "#5b5540",
+    "--coordinate-dark": "#48452e",
+    "--coordinate-light": "#fbf2d5",
+    "--legal": "#244332",
+    "--last": "#edc46c"
+  },
+  "textures": {
+    "light": "parchment-light.svg",
+    "dark": "parchment-dark.svg"
+  }
+}

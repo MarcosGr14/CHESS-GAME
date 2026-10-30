@@ -1,0 +1,10 @@
+{
+  "id": "pieces-classic",
+  "nombre": "Staunton clásico",
+  "categoria": "piezas",
+  "precio": 0,
+  "rareza": "común",
+  "estilo": "Clásico",
+  "descripcion": "Siluetas torneadas, remates suaves y el carácter del club.",
+  "assetFolder": "classic"
+}

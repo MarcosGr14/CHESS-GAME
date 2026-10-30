@@ -1,4 +1,9 @@
 const paths = {
+  shop: (
+    <>
+      <path d="M4 8h16l-1 13H5ZM8 9V7a4 4 0 0 1 8 0v2" />
+    </>
+  ),
   profile: (
     <>
       <circle cx="12" cy="7" r="4" />

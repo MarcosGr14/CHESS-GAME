@@ -1,0 +1,22 @@
+{
+  "id": "board-marble",
+  "nombre": "Mármol del jardín",
+  "categoria": "tableros",
+  "precio": 40,
+  "rareza": "raro",
+  "estilo": "Mármol verde y blanco",
+  "descripcion": "Vetas finas de piedra clara sobre verde de jardín.",
+  "tokens": {
+    "--board-light": "#e3e8da",
+    "--board-dark": "#516751",
+    "--board-edge": "#344a39",
+    "--coordinate-dark": "#344333",
+    "--coordinate-light": "#f3f6e9",
+    "--legal": "#193d2e",
+    "--last": "#d8c170"
+  },
+  "textures": {
+    "light": "marble-light.svg",
+    "dark": "marble-dark.svg"
+  }
+}

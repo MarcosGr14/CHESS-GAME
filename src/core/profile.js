@@ -8,8 +8,10 @@ import {
   OUTCOME_LABELS,
 } from './rewards.js';
 import { getLevelProgress } from './xp.js';
+import { createCollection, validateCollection } from './shop';
+import { PROFILE_SCHEMA_VERSION, migrateProfile } from './profileSchema';
 
-export const PROFILE_SCHEMA_VERSION = 1;
+export { PROFILE_SCHEMA_VERSION } from './profileSchema';
 const validInteger = (value) => Number.isSafeInteger(value) && value >= 0;
 const validTimestamp = (value) =>
   typeof value === 'string' && Number.isFinite(Date.parse(value));
@@ -31,6 +33,7 @@ export function createProfile(createdAt) {
     xp: 0,
     rating: INITIAL_RATING,
     wallet: { balance: 0, earned: 0, spent: 0 },
+    collection: createCollection(),
     stats: { games: 0, wins: 0, losses: 0, draws: 0, streak: 0, bestStreak: 0 },
     processedGameIds: [],
     rewardDays: {},
@@ -183,6 +186,7 @@ function validateReceipt(value) {
 }
 
 export function validateProfile(value) {
+  value = migrateProfile(value);
   if (
     !value ||
     value.schemaVersion !== PROFILE_SCHEMA_VERSION ||
@@ -196,6 +200,7 @@ export function validateProfile(value) {
   if (!validInteger(value.rating) || value.rating < 100 || value.rating > 4000)
     throw new Error('Elo no válido.');
   const wallet = validateWallet(value.wallet);
+  const collection = validateCollection(value.collection);
   const stats = value.stats;
   if (
     !stats ||
@@ -262,6 +267,7 @@ export function validateProfile(value) {
     xp: value.xp,
     rating: value.rating,
     wallet,
+    collection,
     stats: Object.fromEntries(
       ['games', 'wins', 'losses', 'draws', 'streak', 'bestStreak'].map(
         (key) => [key, stats[key]],

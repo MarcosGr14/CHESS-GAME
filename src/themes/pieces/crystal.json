@@ -1,0 +1,10 @@
+{
+  "id": "pieces-crystal",
+  "nombre": "Cristal tallado",
+  "categoria": "piezas",
+  "precio": 240,
+  "rareza": "legendario",
+  "estilo": "Cristal facetado",
+  "descripcion": "Planos de hielo y piedra azul. La luz se sugiere con facetas, sin efectos pesados.",
+  "assetFolder": "crystal"
+}

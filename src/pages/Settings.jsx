@@ -46,7 +46,7 @@ export default function Settings() {
       'application/json',
     );
     setMessage(
-      'Copia exportada con tu perfil, monedas y partidas. Se restaurará en pausa.',
+      'Copia exportada con tu perfil, inventario, monedas y partidas. Se restaurará en pausa.',
     );
   }
   async function readBackup(event) {
@@ -178,8 +178,9 @@ export default function Settings() {
               <strong>Un respaldo para tu tranquilidad.</strong>
               <br />
               <span className="muted">
-                Incluye tu perfil, XP, Elo, monedas, estadísticas y rivales
-                desbloqueados. Las copias se exportan con la partida en pausa.
+                Incluye tu perfil, XP, Elo, monedas, inventario, estilos
+                equipados y rivales desbloqueados. Las copias se exportan con la
+                partida en pausa.
               </span>
             </p>
           </div>
@@ -215,7 +216,7 @@ export default function Settings() {
             {pending.game.moves.length === 1 ? 'movimiento' : 'movimientos'} y
             sus ajustes.{' '}
             {pending.profile
-              ? 'También se reemplazará tu perfil completo, incluidas XP y monedas.'
+              ? 'También se reemplazará tu perfil completo, incluidas XP, monedas e inventario.'
               : 'Esta copia antigua conservará el perfil y las monedas actuales.'}
           </p>
           <div className="modal-actions">

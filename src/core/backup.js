@@ -7,7 +7,7 @@ export function validateBackup(value) {
   if (
     !value ||
     value.app !== 'enroque' ||
-    ![1, 2, 3].includes(value.schemaVersion)
+    ![1, 2, 3, 4].includes(value.schemaVersion)
   )
     throw new Error('La copia no es compatible con esta versión de Enroque.');
   return {
@@ -39,7 +39,7 @@ export function createBackup({
   };
   const backup = {
     app: 'enroque',
-    schemaVersion: 3,
+    schemaVersion: 4,
     exportedAt,
     game: frozen,
     settings,
@@ -48,7 +48,7 @@ export function createBackup({
   };
   return {
     app: 'enroque',
-    schemaVersion: 3,
+    schemaVersion: 4,
     exportedAt,
     ...validateBackup(backup),
   };

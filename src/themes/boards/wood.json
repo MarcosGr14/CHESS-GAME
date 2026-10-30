@@ -1,0 +1,22 @@
+{
+  "id": "board-wood",
+  "nombre": "Nogal de torneo",
+  "categoria": "tableros",
+  "precio": 90,
+  "rareza": "raro",
+  "estilo": "Madera oscura",
+  "descripcion": "Vetas horizontales, nudos suaves y un marco de madera profunda.",
+  "tokens": {
+    "--board-light": "#b99564",
+    "--board-dark": "#60422e",
+    "--board-edge": "#35281e",
+    "--coordinate-dark": "#302414",
+    "--coordinate-light": "#fff2dd",
+    "--legal": "#193a2b",
+    "--last": "#e6c76e"
+  },
+  "textures": {
+    "light": "wood-light.svg",
+    "dark": "wood-dark.svg"
+  }
+}
